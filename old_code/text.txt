@@ -1,0 +1,3 @@
+import OS
+barcode_image.save(f"./barcode/L{data_string}.png")  # Сохранение штрих-кода в файл
+os.startfile(f"./barcode/L{data_string}.png", "print")

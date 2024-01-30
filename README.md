@@ -1,44 +1,41 @@
-pip install python-escpos
+# Proof Vault
 
+Требования:
+- Python 3
 
-PyQt6: Библиотека для создания графического интерфейса.
+Основной стек:
+- PyQt6 - GUI
+- SQLite3 - БД
+- SQLAlchemy - ORM
 
-Установка с помощью pip: pip install PyQt6
-qrcode: Библиотека для создания QR-кодов.
+Пакеты и зависимости:
+- PyAutoGUI
+- qrcode
+- Pillow
+- python-ecspos
+- black
+- pylint
 
-Установка с помощью pip: pip install qrcode
-pillow: Библиотека для работы с изображениями (требуется для qrcode).
-
-Установка с помощью pip: pip install pillow
-
-from PyQt6 import QtCore, QtGui, QtWidgets
-from pageAuth import Ui_Dialog
-from pageenter1 import ui_enterpage2
-import sqlite3
-import sys
-import barceode
-from scanpage import Ui_scanpage
-import datetime
-import qrcode
-import datetime
-import random
-import pyautogui
-import subprocess
-from PyQt6.QtGui import QPixmap
-
-
-from escpos.printer import Usb
-
-# Создание экземпляра принтера
-printer = Usb(0x0483, 0x5740, 0, profile="XP-365B")
-
-# Данные для штрих-кода
-barcode_data = "123456789"
-
-# Печать штрих-кода
-printer.barcode(barcode_data, "EAN13", 64, 2, "", "")
-
-# Сохранение и отправка печати
-printer.cut()
-printer.close()
-
+## Установка и запуск
+```
+1. Скачать код
+git clone https://github.com/5kif4a/proof-vault.git
+2. Перейди в директорию с кодом
+cd proof-vault
+3. Создать виртуальное окружение
+py -m venv venv
+4. Активировать виртуальное окружение
+.\venv\Scripts\activate
+5. Скачать требуемые пакеты и зависимости для проекта
+pip install -r requirements.txt
+6. Запустить код
+python main.py
+```
+## Как собирать в .exe
+```
+python build.py
+```
+## Форматирование кода и линтер
+```
+python format_and_lint.py
+```
