@@ -35,13 +35,27 @@ class Fingerprint(Base):
     )
 
 
-class MaterialEvidence(Base):
-    __tablename__ = 'material_evidence'
+class Case(Base):
+    __tablename__ = 'cases'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     investigator_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
     investigator: Mapped[User] = relationship(User)
     description: Mapped[str]
+    created: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated: Mapped[datetime] = mapped_column(
+        server_default=func.now(), onupdate=func.now()
+    )
+    active: Mapped[bool] = mapped_column(default=True)
+
+
+class MaterialEvidence(Base):
+    __tablename__ = 'material_evidence'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    case_id: Mapped[int] = mapped_column(ForeignKey('cases.id'))
+    case: Mapped[int] = relationship(Case)
     resolution: Mapped[str]
     status: Mapped[str]
     barcode: Mapped[int]
@@ -49,7 +63,6 @@ class MaterialEvidence(Base):
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
-    active: Mapped[bool] = mapped_column(default=True)
 
 
 class Audit(Base):
