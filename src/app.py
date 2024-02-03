@@ -1,5 +1,8 @@
-from PyQt6.QtWidgets import QMainWindow, QLabel
+from PyQt6.QtWidgets import QMainWindow, QTabWidget, QToolBar, QVBoxLayout, QWidget
+
+import src.config as config
 from src.db import init_db
+from src.views import CaseListView, MaterialEvidenceListView, UserListView
 
 init_db()
 
@@ -7,6 +10,20 @@ init_db()
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("My PyQt6 App")
-        self.label = QLabel("Hello, PyQt6!", self)
-        self.setCentralWidget(self.label)
+        self.setWindowTitle(config.APP_NAME)
+        self.setMinimumSize(config.MIN_WIDTH, config.MIN_HEIGHT)
+
+        main_widget = QWidget()
+        main_layout = QVBoxLayout()
+
+        toolbar = QToolBar()
+        self.addToolBar(toolbar)
+
+        tab = QTabWidget()
+        tab.addTab(CaseListView(), "Дела")
+        tab.addTab(MaterialEvidenceListView(), "Вещ.доки")
+        tab.addTab(UserListView(), "Пользователи")
+
+        main_layout.addWidget(tab)
+        main_widget.setLayout(main_layout)
+        self.setCentralWidget(main_widget)
