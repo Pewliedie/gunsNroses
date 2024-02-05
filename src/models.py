@@ -40,7 +40,8 @@ class Case(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     investigator_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    investigator: Mapped[User] = relationship(User)
+    investigator: Mapped[User] = relationship(User, lazy='selectin')
+    name: Mapped[str]
     description: Mapped[str]
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
@@ -55,7 +56,7 @@ class MaterialEvidence(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     case_id: Mapped[int] = mapped_column(ForeignKey('cases.id'))
-    case: Mapped[int] = relationship(Case)
+    case: Mapped[int] = relationship(Case, lazy='selectin')
     resolution: Mapped[str]
     status: Mapped[str]
     barcode: Mapped[int]
