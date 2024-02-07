@@ -5,8 +5,10 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QVBoxLayout,
     QPushButton,
-    QComboBox,
+    QComboBox
 )
+
+from PyQt6.QtCore import pyqtSignal
 import src.models as m
 from src.db import session
 import sqlalchemy as sa
@@ -14,11 +16,15 @@ from src.schemas import UserOut
 
 
 class CaseFormWidget(QWidget):
+
+    on_save = pyqtSignal()
+    
     def __init__(self):
         super().__init__()
         self.init_ui()
 
     def init_ui(self):
+
         heading = QLabel("Добавить дело")
 
         name_label = QLabel("Название")
@@ -69,4 +75,7 @@ class CaseFormWidget(QWidget):
         )
         session.add(case)
         session.commit()
-        self.hide()
+        
+        self.on_save.emit()
+
+        self.close()

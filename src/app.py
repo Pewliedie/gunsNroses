@@ -6,7 +6,6 @@ from src.views import CaseListView, MaterialEvidenceListView, UserListView
 
 init_db()
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
