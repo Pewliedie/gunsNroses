@@ -6,11 +6,12 @@ from src.views import CaseListView, MaterialEvidenceListView, UserListView
 
 init_db()
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(config.APP_NAME)
-        self.setMinimumSize(config.MIN_WIDTH, config.MIN_HEIGHT)
+        self.setMinimumSize(config.MAIN_WINDOW_MIN_WIDTH, config.MAIN_WINDOW_MIN_HEIGHT)
 
         main_widget = QWidget()
         main_layout = QVBoxLayout()

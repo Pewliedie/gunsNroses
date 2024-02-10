@@ -7,6 +7,7 @@
 - PyQt6 - GUI
 - SQLite3 - БД
 - SQLAlchemy - ORM
+- pydantic - Валидация
 
 Пакеты и зависимости:
 - PyAutoGUI

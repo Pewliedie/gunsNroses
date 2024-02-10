@@ -1,3 +1,4 @@
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QWidget,
     QLabel,
@@ -6,49 +7,46 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QPushButton,
     QComboBox,
+    QMessageBox,
 )
+
 import src.models as m
 from src.db import session
-import sqlalchemy as sa
-from src.schemas import UserOut
+from src.config import NESTED_WINDOW_MIN_WIDTH, NESTED_DIALOG_MIN_HEIGHT, STATUS_LIST
 
 
-class CaseFormWidget(QWidget):
+class MaterialEvidenceForm(QWidget):
+    on_save = pyqtSignal()
+
     def __init__(self):
         super().__init__()
+        self.setWindowTitle('Добавить вещ.док')
+        self.setMinimumSize(NESTED_WINDOW_MIN_WIDTH, NESTED_DIALOG_MIN_HEIGHT)
         self.init_ui()
 
     def init_ui(self):
-        heading = QLabel("Добавить дело")
-
-        name_label = QLabel("Название")
+        name_label = QLabel("Наименование")
         self.name_input = QLineEdit()
 
         description_label = QLabel("Описание")
-        self.description_edit = QTextEdit()
+        self.description_textarea = QTextEdit()
 
-        user_select_label = QLabel("Следователь")
-        self.user_select = QComboBox()
-
-        self.users = self.list_users()
-        if self.users:
-            self.selected_user = self.users[0]
-        self.user_select.addItems([str(user) for user in self.users])
+        status_select_label = QLabel("Статус")
+        self.status_select = QComboBox()
+        self.status_select.addItems(STATUS_LIST)
 
         save_button = QPushButton("Сохранить")
 
         layout = QVBoxLayout()
 
-        layout.addWidget(heading)
-
         layout.addWidget(name_label)
         layout.addWidget(self.name_input)
 
         layout.addWidget(description_label)
-        layout.addWidget(self.description_edit)
+        layout.addWidget(self.description_textarea)
 
-        layout.addWidget(user_select_label)
-        layout.addWidget(self.user_select)
+        layout.addWidget(status_select_label)
+        layout.addWidget(self.status_select)
 
         layout.addWidget(save_button)
 
@@ -56,17 +54,37 @@ class CaseFormWidget(QWidget):
 
         save_button.clicked.connect(self.save)
 
-    def list_users(self):
-        query = sa.select(m.User).where(m.User.active.is_(True))
-        results = session.scalars(query).all()
-        return [UserOut.from_obj(obj) for obj in results]
+    def validate(self):
+        error_messages = []
+
+        if not self.name_input.text():
+            error_messages.append("Наименование не может быть пустым")
+
+        if not self.description_textarea.toPlainText():
+            error_messages.append("Постановление не может быть пустым")
+
+        if error_messages:
+            messagebox = QMessageBox()
+            messagebox.critical(self, "Ошибка валидации", "\n".join(error_messages))
+            return False
+
+        return True
 
     def save(self):
-        case = m.Case(
+        valid = self.validate()
+
+        if not valid:
+            return
+
+        material_evidence = m.MaterialEvidence(
             name=self.name_input.text(),
-            description=self.description_edit.toPlainText(),
-            investigator_id=self.users[self.user_select.currentIndex()].id,
+            description=self.description_textarea.toPlainText(),
+            status=self.status_select.currentText(),
         )
-        session.add(case)
+        session.add(material_evidence)
         session.commit()
-        self.hide()
+
+        # TODO: вызывать печать штрих кода вещ дока
+
+        self.on_save.emit()
+        self.close()

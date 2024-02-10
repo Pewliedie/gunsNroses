@@ -1,3 +1,4 @@
+import sqlalchemy as sa
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLineEdit,
@@ -8,22 +9,21 @@ from PyQt6.QtWidgets import (
     QHeaderView,
 )
 
-from .table_model import TableModel
 import src.models as m
-from src.db import session
-import sqlalchemy as sa
 import src.schemas as s
-from .create import CaseFormWidget
+from src.db import session
+from src.views.table_model import TableModel
+from .create import UserCreateForm
 
 
+# TODO: Фильтрация, поиск, пагинация
 class UserListView(QWidget):
+
     def __init__(self):
         super().__init__()
 
         layout = QVBoxLayout()
         self.setLayout(layout)
-
-        self.create_form = CaseFormWidget()
 
         controls_layout = QHBoxLayout()
         controls = QWidget()
@@ -39,33 +39,37 @@ class UserListView(QWidget):
         controls_layout.addWidget(search_button)
         controls_layout.addWidget(add_button)
 
-        table = QTableView()
-
-        headers = [
-            "Идентификатор",
-            "Имя",
+        self.table_view = QTableView()
+        self.headers = [
+            "ID",
             "Фамилия",
+            "Имя",
             "Номер телефона",
             "Звание",
-            "Создан",
-            "Обновлен",
+            "Дата создания",
+            "Дата обновления",
         ]
+        self.fetch_data()
 
-        header = table.horizontalHeader()
+        header = self.table_view.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        data = self.list_users()
-        table_model = TableModel(data=data, headers=headers)
-        table.setModel(table_model)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
 
         layout.addWidget(controls)
-        layout.addWidget(table)
+        layout.addWidget(self.table_view)
 
         add_button.clicked.connect(self.show_create_form)
 
-    def list_users(self):
-        query = sa.select(m.User).order_by(m.User.first_name)
+    def fetch_data(self):
+        query = sa.select(m.User).order_by(m.User.last_name)
         results = session.scalars(query)
-        return [list(s.UserOut.from_obj(obj)) for obj in results]
+        table_model = TableModel(
+            data=[list(s.UserListItem.from_obj(obj)) for obj in results],
+            headers=self.headers,
+        )
+        self.table_view.setModel(table_model)
 
     def show_create_form(self):
+        self.create_form = UserCreateForm()
+        self.create_form.on_save.connect(self.fetch_data)
         self.create_form.show()

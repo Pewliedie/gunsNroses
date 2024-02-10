@@ -1,11 +1,11 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-from .config import DATABASE_PATH
+from .config import DEBUG, DATABASE_PATH
 
 # Create the engine with SQLite and specify the database file path
 url = f'sqlite:///{DATABASE_PATH}'
-engine = create_engine(url, echo=True)
+engine = create_engine(url, echo=DEBUG)
 
 # Create a session factory
 Session = sessionmaker(bind=engine)

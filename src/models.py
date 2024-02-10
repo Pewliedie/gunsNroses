@@ -1,14 +1,15 @@
 from datetime import datetime
+import time
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
-
+from typing import List
 from .db import Base
 
 
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     first_name: Mapped[str]
@@ -23,10 +24,10 @@ class User(Base):
 
 
 class Fingerprint(Base):
-    __tablename__ = 'fingerprints'
+    __tablename__ = "fingerprints"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped[User] = relationship(User)
     data: Mapped[str]
     created: Mapped[datetime] = mapped_column(server_default=func.now())
@@ -36,13 +37,16 @@ class Fingerprint(Base):
 
 
 class Case(Base):
-    __tablename__ = 'cases'
+    __tablename__ = "cases"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    investigator_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    investigator: Mapped[User] = relationship(User, lazy='selectin')
+    investigator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    investigator: Mapped[User] = relationship(User, lazy="selectin")
     name: Mapped[str]
     description: Mapped[str]
+    material_evidences: Mapped[List["MaterialEvidence"]] = relationship(
+        back_populates="case"
+    )
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
@@ -51,15 +55,17 @@ class Case(Base):
 
 
 class MaterialEvidence(Base):
-    __tablename__ = 'material_evidence'
+    __tablename__ = "material_evidence"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    case_id: Mapped[int] = mapped_column(ForeignKey('cases.id'))
-    case: Mapped[int] = relationship(Case, lazy='selectin')
-    resolution: Mapped[str]
+    case_id: Mapped[int | None] = mapped_column(ForeignKey("cases.id"))
+    case: Mapped[Case | None] = relationship(
+        Case, back_populates="material_evidences", lazy="selectin"
+    )
+    description: Mapped[str]
     status: Mapped[str]
-    barcode: Mapped[int]
+    barcode: Mapped[int] = mapped_column(default=round(time.time()))
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
@@ -67,12 +73,12 @@ class MaterialEvidence(Base):
 
 
 class Audit(Base):
-    __tablename__ = 'audits'
+    __tablename__ = "audits"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     table: Mapped[str]
     previous_value: Mapped[str]
     new_value: Mapped[str]
     created: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped[User] = relationship(User)

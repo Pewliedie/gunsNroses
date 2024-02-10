@@ -1,9 +1,10 @@
 from datetime import datetime
 from .base import BaseOutModel
+from pydantic import BaseModel
 import src.models as m
 
 
-class MaterialEvidenceOut(BaseOutModel):
+class MaterialEvidenceListItem(BaseModel):
     id: int
     name: str
     case: str
@@ -12,12 +13,21 @@ class MaterialEvidenceOut(BaseOutModel):
     updated: datetime
 
     @classmethod
-    def from_orm(cls, obj: m.MaterialEvidence):
+    def from_obj(cls, obj: m.MaterialEvidence):
         return cls(
             id=obj.id,
             name=obj.name,
-            case=obj.case.name,
+            case=obj.case.name if obj.case else "",
             status=obj.status,
             created=obj.created,
             updated=obj.updated,
         )
+
+
+class MaterialEvidenceSelectItem(BaseOutModel):
+    id: int
+    name: str
+    status: str
+
+    def __str__(self):
+        return f"{self.name} - {self.status}"
