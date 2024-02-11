@@ -23,7 +23,14 @@ class TableModel(QtCore.QAbstractTableModel):
 
     def columnCount(self, index):
         return len(self._headers)
-
+    
+    def item(self, row, column):
+        item_value = self._data[row][column][1]
+        if isinstance(item_value, datetime):
+            return item_value.strftime("%d %b %Y %H:%M:%S")
+        
+        return item_value
+    
     def headerData(self, section, orientation, role):
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == QtCore.Qt.Orientation.Horizontal:
