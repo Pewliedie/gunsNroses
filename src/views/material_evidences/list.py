@@ -7,7 +7,9 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QHeaderView,
+    QLabel,
 )
+from PyQt6.QtCore import Qt
 
 import src.models as m
 from src.db import session
@@ -23,11 +25,15 @@ class MaterialEvidenceListView(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.scanned_barcode = ""
+
         layout = QVBoxLayout()
         self.setLayout(layout)
 
         controls_layout = QHBoxLayout()
         filters_layout = QHBoxLayout()
+
+        self.barcode_label = QLabel("Сканированный штрихкод: Н/Д")
 
         controls = QWidget()
         controls.setLayout(controls_layout)
@@ -36,6 +42,7 @@ class MaterialEvidenceListView(QWidget):
 
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Введите ключевое слово для поиска...")
+        self.search_input.setClearButtonEnabled(True)
 
         search_button = QPushButton("Поиск")
         reset_button = QPushButton("Сбросить")
@@ -46,7 +53,7 @@ class MaterialEvidenceListView(QWidget):
         controls_layout.addWidget(reset_button)
         controls_layout.addWidget(add_button)
 
-        case_filter = FilterWidget('Дело', m.Case, CaseSelectItem)
+        case_filter = FilterWidget("Дело", m.Case, CaseSelectItem)
         filters_layout.addWidget(case_filter)
 
         self.table_view = QTableView()
@@ -68,6 +75,7 @@ class MaterialEvidenceListView(QWidget):
 
         layout.addWidget(controls)
         layout.addWidget(filters)
+        layout.addWidget(self.barcode_label)
         layout.addWidget(self.table_view)
 
         search_button.clicked.connect(self.search)
@@ -79,8 +87,8 @@ class MaterialEvidenceListView(QWidget):
         if keyword:
             query = query.filter(
                 sa.or_(
-                    sa.func.lower(m.MaterialEvidence).name.contains(keyword),
-                    sa.func.lower(m.MaterialEvidence).description.contains(keyword),
+                    sa.func.lower(m.MaterialEvidence.name).contains(keyword),
+                    sa.func.lower(m.MaterialEvidence.description).contains(keyword),
                 )
             )
         query = query.order_by(m.MaterialEvidence.name)

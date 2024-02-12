@@ -36,6 +36,7 @@ class CaseListView(QWidget):
 
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Введите ключевое слово для поиска...")
+        self.search_input.setClearButtonEnabled(True)
 
         search_button = QPushButton("Поиск")
         reset_button = QPushButton("Сбросить")

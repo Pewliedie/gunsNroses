@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
 import src.models as m
 from src.db import session
 from src.config import NESTED_WINDOW_MIN_WIDTH, NESTED_DIALOG_MIN_HEIGHT, STATUS_LIST
+from src.utils import printer_processor
 
 
 class MaterialEvidenceForm(QWidget):
@@ -20,7 +21,7 @@ class MaterialEvidenceForm(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('Добавить вещ.док')
+        self.setWindowTitle("Добавить вещ.док")
         self.setMinimumSize(NESTED_WINDOW_MIN_WIDTH, NESTED_DIALOG_MIN_HEIGHT)
         self.init_ui()
 
@@ -70,6 +71,9 @@ class MaterialEvidenceForm(QWidget):
 
         return True
 
+    def on_print_end(self):
+        QMessageBox.information(self, "Печать QR-кода", "Печать завершена")
+
     def save(self):
         valid = self.validate()
 
@@ -84,7 +88,7 @@ class MaterialEvidenceForm(QWidget):
         session.add(material_evidence)
         session.commit()
 
-        # TODO: вызывать печать штрих кода вещ дока
+        printer_processor.print_qr_code(material_evidence.barcode, self.on_print_end)
 
         self.on_save.emit()
         self.close()
