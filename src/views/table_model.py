@@ -12,6 +12,10 @@ class TableModel(QtCore.QAbstractTableModel):
     def data(self, index, role):
         if role == Qt.ItemDataRole.DisplayRole:
             value = self._data[index.row()][index.column()][1]
+
+            if isinstance(value, datetime):
+                return value.strftime("%d %b %Y %H:%M:%S")
+
             return value
 
     def rowCount(self, index):
@@ -19,12 +23,6 @@ class TableModel(QtCore.QAbstractTableModel):
 
     def columnCount(self, index):
         return len(self._headers)
-
-    def item(self, row, column):
-        item = self._data[row][column][1]
-        if isinstance(item, datetime):
-            return item.strftime("%d %b %Y %H:%M:%S")
-        return item
 
     def headerData(self, section, orientation, role):
         if role == Qt.ItemDataRole.DisplayRole:

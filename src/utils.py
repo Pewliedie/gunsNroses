@@ -3,6 +3,7 @@ import win32print
 import win32ui
 from src.config import TARGET_PRINTER_NAME, IMAGE_PRINT_WIDTH, IMAGE_PRINT_HEIGHT
 from PIL import ImageWin
+from typing import Callable
 
 
 __all__ = ("printer_processor",)
@@ -20,9 +21,14 @@ class PrinterProcessor:
             )
         ]
 
-    def print_qr_code(self, text, on_end: None = None):
+    def print_qr_code(
+        self, text, on_end: None = None, on_error: Callable[[str], None] | None = None
+    ):
         if self.printer_name not in self.get_printers():
-            raise Exception("Принтер не найден")
+            error_message = "Принтер не найден"
+            if on_error:
+                on_error(error_message)
+            return
 
         image = qrcode.make(text)
 

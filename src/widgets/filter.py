@@ -5,9 +5,10 @@ from src.db import session
 
 
 class FilterWidget(QWidget):
-    def __init__(self, label: str, model, schema):
+    def __init__(self, label: str, model, schema, on_change):
         super().__init__()
         self.options = self.fetch_options(model, schema)
+        self.on_change = on_change
 
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -19,6 +20,13 @@ class FilterWidget(QWidget):
 
         layout.addWidget(label)
         layout.addWidget(self.select)
+
+        self.select.currentIndexChanged.connect(self.handle_change)
+
+    def handle_change(self, index):
+        if index == -1:
+            return None
+        self.on_change(self.options[index].id)
 
     def fetch_options(self, model, schema):
         query = sa.select(model)

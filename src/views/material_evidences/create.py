@@ -71,6 +71,9 @@ class MaterialEvidenceForm(QWidget):
 
         return True
 
+    def on_print_error(self, message):
+        QMessageBox.critical(self, "Печать QR-кода", message)
+
     def on_print_end(self):
         QMessageBox.information(self, "Печать QR-кода", "Печать завершена")
 
@@ -88,7 +91,9 @@ class MaterialEvidenceForm(QWidget):
         session.add(material_evidence)
         session.commit()
 
-        printer_processor.print_qr_code(material_evidence.barcode, self.on_print_end)
-
         self.on_save.emit()
         self.close()
+
+        printer_processor.print_qr_code(
+            material_evidence.barcode, self.on_print_end, self.on_print_error
+        )

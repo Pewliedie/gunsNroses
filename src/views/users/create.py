@@ -32,6 +32,7 @@ class UserCreateForm(QWidget):
 
         phone_number_label = QLabel("Номер телефона")
         self.phone_number_input = QLineEdit()
+        self.phone_number_input.setInputMask("+7-000-000-00-00")
 
         rank_label = QLabel("Звание")
         self.rank_combobox = QComboBox()

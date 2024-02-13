@@ -1,4 +1,5 @@
 import os
+from PyQt6.QtCore import QDateTime, QTimeZone
 
 DEBUG = True
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -11,6 +12,9 @@ MAIN_WINDOW_MIN_HEIGHT = 800
 
 NESTED_WINDOW_MIN_WIDTH = 640
 NESTED_DIALOG_MIN_HEIGHT = 480
+
+TODAY = QDateTime.currentDateTime()
+TODAY.setTimeZone(QTimeZone.systemTimeZone())
 
 TARGET_PRINTER_NAME = "Xprinter XP-365B"
 IMAGE_PRINT_WIDTH = 600

@@ -24,7 +24,9 @@ class CaseCreateForm(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('Добавить дело')
+        self.selected_material_evidences = []
+
+        self.setWindowTitle("Добавить дело")
         self.setMinimumSize(NESTED_WINDOW_MIN_WIDTH, NESTED_DIALOG_MIN_HEIGHT)
         self.init_ui()
 
@@ -61,7 +63,6 @@ class CaseCreateForm(QWidget):
         layout.addWidget(description_label)
         layout.addWidget(self.description_textarea)
 
-        # TODO: обработчик выбора в списке
         layout.addWidget(material_evidences_list_label)
         layout.addWidget(self.material_evidences_list_view)
 
@@ -72,13 +73,16 @@ class CaseCreateForm(QWidget):
 
         self.setLayout(layout)
 
+        self.material_evidences_list_view.selectionModel().selectionChanged.connect(
+            self.on_selection_changed
+        )
         save_button.clicked.connect(self.save)
 
     def list_material_evidence(self):
         query = sa.select(m.MaterialEvidence).where(
             sa.and_(
                 m.MaterialEvidence.case_id.is_(None),
-                m.MaterialEvidence.status.notilike('Уничтожено'),
+                m.MaterialEvidence.status.notilike("Уничтожено"),
             )
         )
         results = session.scalars(query).all()
@@ -88,6 +92,16 @@ class CaseCreateForm(QWidget):
         query = sa.select(m.User).where(m.User.active.is_(True))
         results = session.scalars(query).all()
         return [UserSelectItem.from_obj(obj) for obj in results]
+
+    def on_selection_changed(self):
+        selected_indexes = [
+            index.row() for index in self.material_evidences_list_view.selectedIndexes()
+        ]
+        self.selected_material_evidences = [
+            material_evidence.id
+            for (index, material_evidence) in enumerate(self.material_evidences)
+            if index in selected_indexes
+        ]
 
     def validate(self):
         error_messages = []
@@ -101,7 +115,8 @@ class CaseCreateForm(QWidget):
         if not self.user_select.currentText():
             error_messages.append("Не выбран следователь")
 
-        # TODO: валидация списка вещ.доков
+        if not self.selected_material_evidences:
+            error_messages.append("Не выбраны вещественные доказательства")
 
         if error_messages:
             messagebox = QMessageBox()
@@ -111,19 +126,21 @@ class CaseCreateForm(QWidget):
         return True
 
     def save(self):
-        # self.material_evidences_list_view.selectedIndexes()
         valid = self.validate()
 
         if not valid:
             return
 
-        # TODO: добавлять вещ доки по обратной ссылке case.material_evidences
+        query = sa.select(m.MaterialEvidence).filter(
+            m.MaterialEvidence.id.in_(self.selected_material_evidences)
+        )
+        material_evidences = session.scalars(query).all()
         case = m.Case(
             name=self.name_input.text(),
             description=self.description_textarea.toPlainText(),
             investigator_id=self.users[self.user_select.currentIndex()].id,
         )
-
+        case.material_evidences = material_evidences
         session.add(case)
         session.commit()
 

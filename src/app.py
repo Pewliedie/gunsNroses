@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import (
     QMainWindow,
     QTabWidget,
-    QToolBar,
     QVBoxLayout,
     QWidget,
     QLabel,
@@ -26,9 +25,6 @@ class MainWindow(QMainWindow):
 
         main_widget = QWidget()
         main_layout = QVBoxLayout()
-
-        # toolbar = QToolBar()
-        # self.addToolBar(toolbar)
 
         barcode_layout = QHBoxLayout()
         barcode = QWidget()

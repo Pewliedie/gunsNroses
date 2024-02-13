@@ -1,3 +1,4 @@
+from datetime import timedelta
 import sqlalchemy as sa
 from PyQt6.QtWidgets import (
     QHBoxLayout,
@@ -7,33 +8,34 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QHeaderView,
-    QLabel,
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QDateTime
+from src.config import TODAY
 
 import src.models as m
 from src.db import session
 from src.schemas import MaterialEvidenceListItem, CaseSelectItem
 from src.views.table_model import TableModel
-from src.widgets import FilterWidget
+from src.widgets import FilterWidget, DatePickerWidget
 from .create import MaterialEvidenceForm
 
 
-# TODO: Фильтрация, пагинация
+# TODO: пагинация
 class MaterialEvidenceListView(QWidget):
 
     def __init__(self):
         super().__init__()
 
-        self.scanned_barcode = ""
+        self.case_id = None
+
+        self.from_date = TODAY.addMonths(-1)
+        self.to_date = TODAY
 
         layout = QVBoxLayout()
         self.setLayout(layout)
 
         controls_layout = QHBoxLayout()
         filters_layout = QHBoxLayout()
-
-        self.barcode_label = QLabel("Сканированный штрихкод: Н/Д")
 
         controls = QWidget()
         controls.setLayout(controls_layout)
@@ -53,8 +55,17 @@ class MaterialEvidenceListView(QWidget):
         controls_layout.addWidget(reset_button)
         controls_layout.addWidget(add_button)
 
-        case_filter = FilterWidget("Дело", m.Case, CaseSelectItem)
-        filters_layout.addWidget(case_filter)
+        self.case_filter = FilterWidget("Дело", m.Case, CaseSelectItem, self.set_case)
+        self.from_date_filter = DatePickerWidget(
+            "Создан (От)", self.from_date, self.set_from_date
+        )
+        self.to_date_filter = DatePickerWidget(
+            "Создан (До)", self.to_date, self.set_to_date
+        )
+
+        filters_layout.addWidget(self.case_filter)
+        filters_layout.addWidget(self.from_date_filter)
+        filters_layout.addWidget(self.to_date_filter)
 
         self.table_view = QTableView()
 
@@ -75,22 +86,34 @@ class MaterialEvidenceListView(QWidget):
 
         layout.addWidget(controls)
         layout.addWidget(filters)
-        layout.addWidget(self.barcode_label)
         layout.addWidget(self.table_view)
 
-        search_button.clicked.connect(self.search)
+        search_button.clicked.connect(self.fetch_data)
         reset_button.clicked.connect(self.reset)
         add_button.clicked.connect(self.show_create_form)
 
-    def fetch_data(self, keyword: str | None = None):
+    def fetch_data(self):
+        keyword = self.search_input.text().lower()
         query = sa.select(m.MaterialEvidence)
+
         if keyword:
             query = query.filter(
                 sa.or_(
-                    sa.func.lower(m.MaterialEvidence.name).contains(keyword),
-                    sa.func.lower(m.MaterialEvidence.description).contains(keyword),
+                    sa.func.casefold(m.MaterialEvidence.name).contains(keyword),
+                    sa.func.casefold(m.MaterialEvidence.description).contains(keyword),
                 )
             )
+
+        if self.case_id:
+            query = query.filter(m.MaterialEvidence.case_id == self.case_id)
+
+        query = query.filter(
+            sa.and_(
+                m.MaterialEvidence.created >= self.from_date.toPyDateTime(),
+                m.MaterialEvidence.created
+                < self.to_date.toPyDateTime() + timedelta(days=1),
+            )
+        )
         query = query.order_by(m.MaterialEvidence.name)
         results = session.scalars(query)
         self.table_model = TableModel(
@@ -99,13 +122,26 @@ class MaterialEvidenceListView(QWidget):
         )
         self.table_view.setModel(self.table_model)
 
-    def search(self):
-        keyword = self.search_input.text().lower()
-        if keyword:
-            self.fetch_data(keyword)
-
     def reset(self):
         self.search_input.clear()
+        self.case_id = None
+        self.from_date = TODAY.addMonths(-1)
+        self.to_date = TODAY
+        self.case_filter.select.setCurrentIndex(-1)
+        self.from_date_filter.datepicker.setDateTime(self.from_date)
+        self.to_date_filter.datepicker.setDateTime(self.to_date)
+        self.fetch_data()
+
+    def set_case(self, case_id: int):
+        self.case_id = case_id
+        self.fetch_data()
+
+    def set_from_date(self, dt: QDateTime):
+        self.from_date = dt
+        self.fetch_data()
+
+    def set_to_date(self, dt: QDateTime):
+        self.to_date = dt
         self.fetch_data()
 
     def show_create_form(self):
