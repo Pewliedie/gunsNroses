@@ -8,6 +8,7 @@ class UserListItem(BaseOutModel):
     last_name: str
     first_name: str
     phone_number: str
+    password: str
     rank: str
     created: datetime
     updated: datetime
