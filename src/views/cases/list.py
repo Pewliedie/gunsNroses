@@ -71,7 +71,7 @@ class CaseListView(QWidget):
 
         self.table_view = QTableView()
         self.headers = [
-            "ID",
+            "",
             "Наименование",
             "Следователь",
             "Дата создания",
@@ -120,14 +120,22 @@ class CaseListView(QWidget):
         )
         self.table_view.setModel(table_model)
 
+        for i in range(table_model.rowCount(None)):
+            button = QPushButton("✏️")
+            self.table_view.setIndexWidget(table_model.index(i, 0), button)
+
     def reset(self):
         self.search_input.clear()
+
         self.investigator_id = None
+
         self.from_date = TODAY.addMonths(-1)
         self.to_date = TODAY
+
         self.investigator_filter.select.setCurrentIndex(-1)
         self.from_date_filter.datepicker.setDateTime(self.from_date)
         self.to_date_filter.datepicker.setDateTime(self.to_date)
+
         self.fetch_data()
 
     def set_investigator(self, investigator_id: int):

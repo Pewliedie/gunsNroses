@@ -11,12 +11,19 @@ class TableModel(QtCore.QAbstractTableModel):
 
     def data(self, index, role):
         if role == Qt.ItemDataRole.DisplayRole:
-            value = self._data[index.row()][index.column()][1]
+            row = index.row()
+            col = index.column()
+
+            if col == 0:
+                return None
+
+            value = self._data[row][col][1]
 
             if isinstance(value, datetime):
                 return value.strftime("%d %b %Y %H:%M:%S")
 
             return value
+        return None
 
     def rowCount(self, index):
         return len(self._data)
