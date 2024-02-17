@@ -10,7 +10,7 @@ from src.biometrics.recognition import biometric_auth
 from src.db import session
 from src.schemas import UserSelectItem
 
-class AuthenticationForm(QWidget):
+class AuthenticationView(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Авторизация")
@@ -29,26 +29,30 @@ class AuthenticationForm(QWidget):
 
         self.login_button = QPushButton("Войти")
         self.face_id_button = QPushButton("Face ID")
-        self.login_button.clicked.connect(self.login)
-        self.face_id_button.clicked.connect(self.face_id)
         layout = QVBoxLayout()
+
         layout.addWidget(self.username_label)
         layout.addWidget(self.user_select)
         layout.addWidget(self.password_label)
         layout.addWidget(self.password_input)
         layout.addWidget(self.login_button)
         layout.addWidget(self.face_id_button)
+
         self.setLayout(layout)
+
         self.session_timer = QTimer()
         self.session_timer.timeout.connect(self.session_expired)
         self.session_timer.start(300000)  #10 minutes session expiration time
+
+        self.login_button.clicked.connect(self.authenticated_by_password)
+        self.face_id_button.clicked.connect(self.authenticated_by_face_id)
 
     def list_users(self):
         query = sa.select(User).where(User.active.is_(True))
         results = session.scalars(query).all()
         return [UserSelectItem.from_obj(obj) for obj in results]
 
-    def login(self):
+    def authenticated_by_password(self):
         user_password = self.users[self.user_select.currentIndex()].password
         password = self.password_input.text()
         if user_password == password:
@@ -58,16 +62,16 @@ class AuthenticationForm(QWidget):
         else:
             QMessageBox.warning(self, "Ошибка авторизации", "Неверный пароль. Попробуйте снова.")
             
-    def face_id(self):
+    def authenticated_by_face_id(self):
         try:
             user_id = self.users[self.user_select.currentIndex()].id
             user = session.query(User).filter(User.id == user_id).first()
-            result = biometric_auth(user.face_id.data, str(user.face_id.id))
+            authenticated = biometric_auth(user.face.data, str(user.face.id))
         except:
             QMessageBox.warning(self, "Ошибка авторизации", "Ошибка при аутентификации по FACE ID")
-            result = False
+            authenticated = False
         
-        if result == True:
+        if authenticated:
             self.session_timer.stop()
             self.hide()
             self.open_main_window()

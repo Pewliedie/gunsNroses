@@ -130,4 +130,3 @@ class UserCreateForm(QWidget):
         if dialogSuccess:
             image_path = dialog.selectedFiles()[0]
             self.encoding_image_data = reco.encode_image(image_path)
-            print(self.encoding_image_data)

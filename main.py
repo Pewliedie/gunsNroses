@@ -2,13 +2,13 @@ import locale
 import sys
 
 from PyQt6.QtWidgets import QApplication
-from src.widgets.auth import AuthenticationForm
+from src.views import AuthenticationView
 
 def main():
     
     locale.setlocale(locale.LC_ALL, "")
     app = QApplication(sys.argv)
-    window = AuthenticationForm()
+    window = AuthenticationView()
     window.show()
     sys.exit(app.exec())
 
