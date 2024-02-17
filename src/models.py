@@ -87,10 +87,11 @@ class MaterialEvidenceEvent(Base):
     __tablename__ = "material_evidence_events"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user: Mapped[User] = relationship(User)
     material_evidence_id: Mapped[int] = mapped_column(ForeignKey("material_evidence.id"))
     material_evidence: Mapped[MaterialEvidence] = relationship(MaterialEvidence)
     event_type: Mapped[str]
-    description: Mapped[str]
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()

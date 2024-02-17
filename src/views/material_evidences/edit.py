@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
 )
 
 import src.models as m
+from src.config import STATUS_LIST
 from src.db import session
 from src.config import DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT, STATUS_LIST
 
@@ -52,6 +53,9 @@ class MaterialEvidenceEditForm(QWidget):
 
         save_button = QPushButton("Сохранить")
         delete_button = QPushButton("Удалить")
+        return_button = QPushButton("Вернуть")
+        take_button = QPushButton("Забрать")
+        destroy_button = QPushButton("Уничтожить")
 
         layout = QVBoxLayout()
 
@@ -66,12 +70,18 @@ class MaterialEvidenceEditForm(QWidget):
 
         layout.addWidget(save_button)
         layout.addWidget(delete_button)
+        layout.addWidget(return_button)
+        layout.addWidget(take_button)
+        layout.addWidget(destroy_button)
 
         self.setLayout(layout)
 
         save_button.clicked.connect(self.save)
         delete_button.clicked.connect(self.delete)
-
+        return_button.clicked.connect(self.return_event)
+        take_button.clicked.connect(self.take_event)
+        destroy_button.clicked.connect(self.destroy_event)
+        
     def get_data(self, entity_id: int) -> m.MaterialEvidence | None:
         query = sa.select(m.MaterialEvidence).where(m.MaterialEvidence.id == entity_id)
         result: m.MaterialEvidence | None = session.scalar(query)
@@ -123,6 +133,33 @@ class MaterialEvidenceEditForm(QWidget):
             return
 
         self.material_evidence.active = False
+        session.commit()
+        self.on_save.emit()
+        self.close()
+
+    def return_event(self):
+        self.create_event(STATUS_LIST[0])
+
+    def take_event(self):
+        self.create_event(STATUS_LIST[1])
+
+    def destroy_event(self):
+        self.create_event(STATUS_LIST[2])
+        self.delete()
+    
+    def create_event(self, event_type: str):
+        
+        self.material_evidence.status = event_type
+
+        if session.is_modified(self.material_evidence):
+            session.commit()
+
+        query = sa.select(m.Session).where(m.Session.active.is_(True))
+        session_data = session.scalars(query).first()
+        event = m.MaterialEvidenceEvent(
+            user=session_data.user, material_evidence=self.material_evidence, event_type=event_type
+        )
+        session.add(event)
         session.commit()
         self.on_save.emit()
         self.close()

@@ -12,8 +12,6 @@ from PyQt6.QtCore import QTimer, Qt
 
 import sqlalchemy as sa
 
-import src.config as config
-
 from src.models import User, Session
 from src.app import MainWindow
 from src.biometrics.recognition import biometric_auth
