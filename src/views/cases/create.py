@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (
 )
 
 import src.models as m
-from src.config import NESTED_WINDOW_MIN_WIDTH, NESTED_DIALOG_MIN_HEIGHT
+from src.config import DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT
 from src.db import session
 from src.schemas import UserSelectItem, MaterialEvidenceSelectItem
 
@@ -27,7 +27,7 @@ class CaseCreateForm(QWidget):
         self.selected_material_evidences = []
 
         self.setWindowTitle("Добавить дело")
-        self.setMinimumSize(NESTED_WINDOW_MIN_WIDTH, NESTED_DIALOG_MIN_HEIGHT)
+        self.setMinimumSize(DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT)
         self.init_ui()
 
     def init_ui(self):

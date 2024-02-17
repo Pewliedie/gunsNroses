@@ -4,7 +4,7 @@ import numpy as np
 import json
 
 
-class Recognition:
+class Recognizer:
     def __init__(self):
         self.known_face_encodings = []
         self.known_face_names = []
@@ -53,7 +53,7 @@ class Recognition:
 
 def biometric_auth(face_encodings, id):
 
-    reco = Recognition()
+    reco = Recognizer()
     image_encoding = np.array(json.loads(face_encodings))
 
     reco.known_face_encodings.append(image_encoding)

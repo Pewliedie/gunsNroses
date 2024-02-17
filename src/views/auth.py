@@ -32,12 +32,7 @@ class AuthenticationView(QWidget):
         self.session_timer.start(300000)  # 10 minutes session expiration time
 
         self.setWindowTitle("Авторизация")
-        self.setMinimumSize(
-            config.LOGIN_WINDOW_MIN_WIDTH, config.LOGIN_WINDOW_MIN_HEIGHT
-        )
-        self.setMaximumSize(
-            config.LOGIN_WINDOW_MIN_WIDTH, config.LOGIN_WINDOW_MIN_HEIGHT
-        )
+        self.setFixedSize(300, 200)
 
         self.username_label = QLabel("Имя пользователя:")
         self.user_select = QComboBox()

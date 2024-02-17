@@ -11,10 +11,10 @@ from PyQt6.QtWidgets import (
 )
 
 import src.models as m
-from src.config import NESTED_WINDOW_MIN_WIDTH, RANK_LIST
+from src.config import DIALOG_MIN_WIDTH, RANK_LIST
 from src.db import session
-from src.biometrics.recognition import Recognition
 
+from src.biometrics.recognition import Recognizer
 
 class UserCreateForm(QWidget):
     on_save = pyqtSignal()
@@ -22,7 +22,7 @@ class UserCreateForm(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('Добавить пользователя')
-        self.setMinimumWidth(NESTED_WINDOW_MIN_WIDTH)
+        self.setMinimumWidth(DIALOG_MIN_WIDTH)
         self.init_ui()
 
     def init_ui(self):
@@ -124,7 +124,7 @@ class UserCreateForm(QWidget):
         dialog.setNameFilter("*.jpg")
         dialogSuccess = dialog.exec()
 
-        reco = Recognition()
+        recognizer = Recognizer()
         if dialogSuccess:
             image_path = dialog.selectedFiles()[0]
-            self.encoding_image_data = reco.encode_image(image_path)
+            self.encoding_image_data = recognizer.encode_image(image_path)

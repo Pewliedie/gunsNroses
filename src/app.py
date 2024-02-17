@@ -10,16 +10,27 @@ from PyQt6.QtGui import QAction, QCloseEvent
 from PyQt6.QtCore import Qt
 import src.config as config
 from src.db import init_db
+from src.audit import init_audit
 from src.views import CaseListView, MaterialEvidenceListView, UserListView
 
 init_db()
+init_audit()
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.scanned_barcode = ""
 
+        try:
+            self.init_ui()
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Ошибка",
+                "Возникла ошибка в ходе работы приложения. Подробнее: " + str(e),
+            )
+
+    def init_ui(self):
         self.setWindowTitle(config.APP_NAME)
         self.setMinimumSize(config.MAIN_WINDOW_MIN_WIDTH, config.MAIN_WINDOW_MIN_HEIGHT)
 

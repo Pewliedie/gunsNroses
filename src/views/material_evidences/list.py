@@ -8,7 +8,6 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QHeaderView,
-    QLabel,
 )
 from PyQt6.QtCore import QDateTime
 from src.config import TODAY
@@ -18,7 +17,8 @@ from src.db import session
 from src.schemas import MaterialEvidenceListItem, CaseSelectItem
 from src.views.table_model import TableModel
 from src.widgets import FilterWidget, DatePickerWidget
-from .create import MaterialEvidenceForm
+from .create import MaterialEvidenceCreateForm
+from .edit import MaterialEvidenceEditForm
 
 
 # TODO: пагинация
@@ -110,6 +110,7 @@ class MaterialEvidenceListView(QWidget):
 
         query = query.filter(
             sa.and_(
+                m.MaterialEvidence.active.is_(True),
                 m.MaterialEvidence.created >= self.from_date.toPyDateTime(),
                 m.MaterialEvidence.created
                 < self.to_date.toPyDateTime() + timedelta(days=1),
@@ -117,16 +118,17 @@ class MaterialEvidenceListView(QWidget):
         )
         query = query.order_by(m.MaterialEvidence.name)
         results = session.scalars(query)
+        data = [list(MaterialEvidenceListItem.from_obj(obj)) for obj in results.all()]
         table_model = TableModel(
-            data=[
-                list(MaterialEvidenceListItem.from_obj(obj)) for obj in results.all()
-            ],
+            data=data,
             headers=self.headers,
         )
         self.table_view.setModel(table_model)
 
-        for i in range(table_model.rowCount(None)):
+        for i in range(len(data)):
+            me_id = data[i][0][1]
             button = QPushButton("✏️")
+            button.clicked.connect(lambda: self.show_edit_form(me_id))
             self.table_view.setIndexWidget(table_model.index(i, 0), button)
 
     def reset(self):
@@ -157,6 +159,11 @@ class MaterialEvidenceListView(QWidget):
         self.fetch_data()
 
     def show_create_form(self):
-        self.create_form = MaterialEvidenceForm()
+        self.create_form = MaterialEvidenceCreateForm()
         self.create_form.on_save.connect(self.fetch_data)
         self.create_form.show()
+
+    def show_edit_form(self, me_id: int):
+        self.edit_form = MaterialEvidenceEditForm(me_id)
+        self.edit_form.on_save.connect(self.fetch_data)
+        self.edit_form.show()

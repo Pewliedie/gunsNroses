@@ -1,6 +1,6 @@
 from datetime import datetime
-import time
 
+import sqlalchemy as sa
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import expression, func
@@ -26,6 +26,7 @@ class User(Base):
     )
 
     face: Mapped["FaceID"] = relationship("FaceID", back_populates="user")
+    active: Mapped[bool] = mapped_column(server_default=expression.true())
 
 
 class FaceID(Base):
@@ -61,6 +62,7 @@ class Case(Base):
     material_evidences: Mapped[List["MaterialEvidence"]] = relationship(
         back_populates="case"
     )
+    active: Mapped[bool] = mapped_column(server_default=expression.true())
 
 
 class MaterialEvidence(Base):
@@ -74,12 +76,12 @@ class MaterialEvidence(Base):
     )
     description: Mapped[str]
     status: Mapped[str]
-    barcode: Mapped[int] = mapped_column(default=round(time.time()))
+    barcode: Mapped[int]
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
-
+    active: Mapped[bool] = mapped_column(server_default=expression.true())
 
 class Session(Base):
     __tablename__ = "sessions"
@@ -91,14 +93,16 @@ class Session(Base):
     logout: Mapped[datetime | None] = mapped_column(onupdate=func.now())
     active: Mapped[bool] = mapped_column(server_default=expression.true())
 
-
-class Audit(Base):
-    __tablename__ = "audits"
+class AuditEntry(Base):
+    __tablename__ = "audit_entries"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    table: Mapped[str]
-    previous_value: Mapped[str]
-    new_value: Mapped[str]
-    created: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    user: Mapped[User] = relationship(User)
+    object_id: Mapped[int]
+    table_name: Mapped[str]
+    class_name: Mapped[str]
+    action: Mapped[str]
+    fields: Mapped[str]
+    data: Mapped[str]
+    created: Mapped[datetime] = mapped_column(server_default=sa.func.now())
+    # user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    # user: Mapped[User] = relationship(User)

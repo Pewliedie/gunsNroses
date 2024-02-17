@@ -1,3 +1,4 @@
+import uuid
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QWidget,
@@ -12,17 +13,18 @@ from PyQt6.QtWidgets import (
 
 import src.models as m
 from src.db import session
-from src.config import NESTED_WINDOW_MIN_WIDTH, NESTED_DIALOG_MIN_HEIGHT, STATUS_LIST
+from src.config import DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT, STATUS_LIST
+
 from src.utils import printer_processor
 
 
-class MaterialEvidenceForm(QWidget):
+class MaterialEvidenceCreateForm(QWidget):
     on_save = pyqtSignal()
 
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Добавить вещ.док")
-        self.setMinimumSize(NESTED_WINDOW_MIN_WIDTH, NESTED_DIALOG_MIN_HEIGHT)
+        self.setMinimumSize(DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT)
         self.init_ui()
 
     def init_ui(self):
@@ -83,10 +85,12 @@ class MaterialEvidenceForm(QWidget):
         if not valid:
             return
 
+        uuid_value = str(uuid.uuid4())
         material_evidence = m.MaterialEvidence(
             name=self.name_input.text(),
             description=self.description_textarea.toPlainText(),
             status=self.status_select.currentText(),
+            barcode=uuid_value,
         )
         session.add(material_evidence)
         session.commit()

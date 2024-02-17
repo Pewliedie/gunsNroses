@@ -15,6 +15,7 @@ from src.config import TODAY
 import src.models as m
 from src.db import session
 from src.schemas import CaseListItem, UserSelectItem
+from src.views.cases.edit import CaseEditForm
 from src.views.table_model import TableModel
 from src.widgets import FilterWidget, DatePickerWidget
 from .create import CaseCreateForm
@@ -108,20 +109,24 @@ class CaseListView(QWidget):
 
         query = query.filter(
             sa.and_(
+                m.Case.active.is_(True),
                 m.Case.created >= self.from_date.toPyDateTime(),
                 m.Case.created < self.to_date.toPyDateTime() + timedelta(days=1),
             )
         )
         query = query.order_by(m.Case.created.desc())
         results = session.scalars(query)
+        data = [list(CaseListItem.from_obj(obj)) for obj in results]
         table_model = TableModel(
-            data=[list(CaseListItem.from_obj(obj)) for obj in results],
+            data=data,
             headers=self.headers,
         )
         self.table_view.setModel(table_model)
 
-        for i in range(table_model.rowCount(None)):
+        for i in range(len(data)):
+            case_id = data[i][0][1]
             button = QPushButton("✏️")
+            button.clicked.connect(lambda: self.show_edit_form(case_id))
             self.table_view.setIndexWidget(table_model.index(i, 0), button)
 
     def reset(self):
