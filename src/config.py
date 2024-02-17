@@ -1,11 +1,13 @@
 import os
-from PyQt6.QtCore import QDateTime, QTimeZone
+
+from PyQt6.QtCore import QDateTime, QDir, QTimeZone
 
 DEBUG = True
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASE_PATH = os.path.join(ROOT_DIR, "database.db")
 ICON_PATH = os.path.join(ROOT_DIR, "assets/icon.png")
-FONTS_DIR = os.path.join(ROOT_DIR, "assets/fonts")
+FONT_PATH = os.path.join(ROOT_DIR, "assets/fonts/Montserrat-Regular.ttf")
+DESKTOP_PATH = QDir.homePath() + '/Desktop'
 
 APP_NAME = "E-Aigaq"
 

@@ -1,7 +1,9 @@
-from datetime import datetime
-from .base import BaseOutModel
-import src.models as m
 import typing as t
+from datetime import datetime
+
+import src.models as m
+
+from .base import BaseOutModel
 
 
 class CaseListItem(BaseOutModel):
@@ -13,7 +15,7 @@ class CaseListItem(BaseOutModel):
 
     @classmethod
     def from_obj(cls, obj: m.Case) -> t.Self:
-        investigator = f'{obj.investigator.rank} - {obj.investigator.first_name} {obj.investigator.last_name}'
+        investigator = f"{obj.investigator.rank} - {obj.investigator.first_name} {obj.investigator.last_name}"
         data = {
             "id": obj.id,
             "name": obj.name,
@@ -24,7 +26,7 @@ class CaseListItem(BaseOutModel):
         return cls(**data)
 
     def __str__(self) -> str:
-        return f'{self.name} - {self.investigator}'
+        return f"{self.name} - {self.investigator}"
 
 
 class CaseSelectItem(BaseOutModel):
@@ -33,3 +35,30 @@ class CaseSelectItem(BaseOutModel):
 
     def __str__(self) -> str:
         return self.name
+
+
+class CaseExportItem(BaseOutModel):
+    id: int
+    name: str
+    investigator: str
+    material_evidences: str
+    created: datetime
+    updated: datetime
+    active: bool
+
+    @classmethod
+    def from_obj(cls, obj: m.Case) -> t.Self:
+        investigator = f"{obj.investigator.first_name} {obj.investigator.last_name} - ({obj.investigator.rank})"
+        material_evidences = "\n".join(
+            [f"{e.name} - {e.status}" for e in obj.material_evidences]
+        )
+        data = {
+            "id": obj.id,
+            "name": obj.name,
+            "investigator": investigator,
+            "material_evidences": material_evidences,
+            "created": obj.created,
+            "updated": obj.updated,
+            "active": obj.active,
+        }
+        return cls(**data)

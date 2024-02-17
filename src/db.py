@@ -2,7 +2,7 @@ import sqlalchemy as sa
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-from .config import DEBUG, DATABASE_PATH
+from .config import DATABASE_PATH, DEBUG
 
 
 def casefold(s: str):

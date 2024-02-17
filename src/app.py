@@ -1,16 +1,10 @@
-from PyQt6.QtWidgets import (
-    QMainWindow,
-    QTabWidget,
-    QVBoxLayout,
-    QWidget,
-    QToolBar,
-    QMessageBox,
-)
-from PyQt6.QtGui import QAction, QCloseEvent
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QAction, QCloseEvent
+from PyQt6.QtWidgets import QMainWindow, QMessageBox, QTabWidget, QVBoxLayout, QWidget
+
 import src.config as config
-from src.db import init_db
 from src.audit import init_audit
+from src.db import init_db
 from src.views import CaseListView, MaterialEvidenceListView, UserListView
 
 init_db()
@@ -37,30 +31,20 @@ class MainWindow(QMainWindow):
         main_widget = QWidget()
         main_layout = QVBoxLayout()
 
-        toolbar = QToolBar()
         tab = QTabWidget()
 
         tab.addTab(CaseListView(), "Дела")
         tab.addTab(MaterialEvidenceListView(), "Вещ.доки")
         tab.addTab(UserListView(), "Пользователи")
 
-        find_case_action = QAction("Найти дела по штрихкоду", self)
-        find_material_evidence_action = QAction("Найти вещ.док по штрихкоду", self)
-
-        toolbar.addAction(find_case_action)
-        toolbar.addAction(find_material_evidence_action)
-
         main_layout.addWidget(tab)
         main_widget.setLayout(main_layout)
-        self.addToolBar(toolbar)
+
         self.setCentralWidget(main_widget)
 
     def closeEvent(self, event):
         print("Close event")
         return super().closeEvent(event)
-
-    def clear_barcode(self):
-        self.barcode_label.setText("Сканированный штрихкод: Н/Д")
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Return:

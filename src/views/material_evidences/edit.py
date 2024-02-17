@@ -1,19 +1,19 @@
 import sqlalchemy as sa
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
-    QWidget,
+    QComboBox,
     QLabel,
     QLineEdit,
+    QMessageBox,
+    QPushButton,
     QTextEdit,
     QVBoxLayout,
-    QPushButton,
-    QComboBox,
-    QMessageBox,
+    QWidget,
 )
 
 import src.models as m
+from src.config import DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH, STATUS_LIST
 from src.db import session
-from src.config import DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT, STATUS_LIST
 
 
 class MaterialEvidenceEditForm(QWidget):

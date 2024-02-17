@@ -1,20 +1,20 @@
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
-    QWidget,
+    QComboBox,
+    QFileDialog,
     QLabel,
     QLineEdit,
-    QVBoxLayout,
-    QPushButton,
-    QComboBox,
     QMessageBox,
-    QFileDialog,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
 import src.models as m
+from src.biometrics.recognition import Recognizer
 from src.config import DIALOG_MIN_WIDTH, RANK_LIST
 from src.db import session
 
-from src.biometrics.recognition import Recognizer
 
 class UserCreateForm(QWidget):
     on_save = pyqtSignal()
@@ -105,9 +105,10 @@ class UserCreateForm(QWidget):
             first_name=self.first_name_input.text(),
             last_name=self.last_name_input.text(),
             phone_number=self.phone_number_input.text(),
-            password=self.password_input.text(),
             rank=self.rank_combobox.currentText(),
         )
+
+        user.set_password(self.password_input.text())
 
         face_id = m.FaceID(user=user, data=self.encoding_image_data)
 

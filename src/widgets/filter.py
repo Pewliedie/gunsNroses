@@ -1,5 +1,5 @@
 import sqlalchemy as sa
-from PyQt6.QtWidgets import QVBoxLayout, QWidget, QLabel, QComboBox
+from PyQt6.QtWidgets import QComboBox, QLabel, QVBoxLayout, QWidget
 
 from src.db import session
 

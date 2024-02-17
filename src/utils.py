@@ -1,10 +1,11 @@
+from typing import Callable
+
 import qrcode
 import win32print
 import win32ui
-from src.config import TARGET_PRINTER_NAME, IMAGE_PRINT_WIDTH, IMAGE_PRINT_HEIGHT
 from PIL import ImageWin
-from typing import Callable
 
+from src.config import IMAGE_PRINT_HEIGHT, IMAGE_PRINT_WIDTH, TARGET_PRINTER_NAME
 
 __all__ = ("printer_processor",)
 
