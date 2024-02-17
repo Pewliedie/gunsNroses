@@ -51,7 +51,7 @@ class MaterialEvidenceEditForm(QWidget):
                 break
 
         save_button = QPushButton("Сохранить")
-        edit_button = QPushButton("Удалить")
+        delete_button = QPushButton("Удалить")
 
         layout = QVBoxLayout()
 
@@ -65,12 +65,12 @@ class MaterialEvidenceEditForm(QWidget):
         layout.addWidget(self.status_select)
 
         layout.addWidget(save_button)
-        layout.addWidget(edit_button)
+        layout.addWidget(delete_button)
 
         self.setLayout(layout)
 
         save_button.clicked.connect(self.save)
-        edit_button.clicked.connect(self.delete)
+        delete_button.clicked.connect(self.delete)
 
     def get_data(self, entity_id: int) -> m.MaterialEvidence | None:
         query = sa.select(m.MaterialEvidence).where(m.MaterialEvidence.id == entity_id)
