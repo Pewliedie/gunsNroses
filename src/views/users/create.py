@@ -16,7 +16,6 @@ from src.db import session
 
 from src.biometrics.recognition import Recognizer
 
-
 class UserCreateForm(QWidget):
     on_save = pyqtSignal()
 

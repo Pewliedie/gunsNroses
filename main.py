@@ -7,6 +7,7 @@ from PyQt6.QtGui import QIcon
 from src.config import ICON_PATH
 
 
+
 def main():
     locale.setlocale(locale.LC_ALL, "")
     app = QApplication(sys.argv)

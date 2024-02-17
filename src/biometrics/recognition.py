@@ -80,8 +80,6 @@ def biometric_auth(face_encodings, id):
             else:
                 return False
 
-        cv2.imshow("Frame", frame)
-
         key = cv2.waitKey(1)
         if key == 27:
             break
