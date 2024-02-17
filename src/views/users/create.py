@@ -7,14 +7,13 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QComboBox,
     QMessageBox,
-    QFileDialog
+    QFileDialog,
 )
 
 import src.models as m
 from src.config import NESTED_WINDOW_MIN_WIDTH, RANK_LIST
 from src.db import session
 from src.biometrics.recognition import Recognition
-
 
 
 class UserCreateForm(QWidget):
@@ -27,7 +26,7 @@ class UserCreateForm(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        
+
         self.encoding_image_data = 'empty_data'
         first_name_label = QLabel("Имя")
         self.first_name_input = QLineEdit()
@@ -66,7 +65,6 @@ class UserCreateForm(QWidget):
         layout.addWidget(rank_label)
         layout.addWidget(self.rank_combobox)
 
-        
         layout.addWidget(open_image_button)
         layout.addWidget(save_button)
 
@@ -86,7 +84,7 @@ class UserCreateForm(QWidget):
 
         if not self.phone_number_input.text():
             error_messages.append("Номер телефона обязательное поле")
-        
+
         if not self.password_input.text():
             error_messages.append("Пароль обязательное поле")
 
@@ -110,8 +108,8 @@ class UserCreateForm(QWidget):
             password=self.password_input.text(),
             rank=self.rank_combobox.currentText(),
         )
-        
-        face_id = m.FaceID(user=user, data = self.encoding_image_data)
+
+        face_id = m.FaceID(user=user, data=self.encoding_image_data)
 
         session.add(user)
         session.add(face_id)

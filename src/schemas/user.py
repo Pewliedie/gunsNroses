@@ -25,4 +25,4 @@ class UserSelectItem(BaseOutModel):
     password: str
 
     def __str__(self):
-        return f"{self.rank} - {self.last_name} {self.first_name}"
+        return f"{self.last_name} {self.first_name} ({self.rank})"

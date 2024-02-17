@@ -4,8 +4,9 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QToolBar,
+    QMessageBox,
 )
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QCloseEvent
 from PyQt6.QtCore import Qt
 import src.config as config
 from src.db import init_db
@@ -42,6 +43,10 @@ class MainWindow(QMainWindow):
         main_widget.setLayout(main_layout)
         self.addToolBar(toolbar)
         self.setCentralWidget(main_widget)
+
+    def closeEvent(self, event):
+        print("Close event")
+        return super().closeEvent(event)
 
     def clear_barcode(self):
         self.barcode_label.setText("Сканированный штрихкод: Н/Д")

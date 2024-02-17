@@ -3,7 +3,7 @@ import time
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql import func
+from sqlalchemy.sql import expression, func
 from typing import List
 from src.db import Base
 
@@ -17,12 +17,15 @@ class User(Base):
     last_name: Mapped[str]
     phone_number: Mapped[str]
     rank: Mapped[str]
+    is_superuser: Mapped[bool] = mapped_column(server_default=expression.false())
+    active: Mapped[bool] = mapped_column(default=True)
+
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
+
     face: Mapped["FaceID"] = relationship("FaceID", back_populates="user")
-    active: Mapped[bool] = mapped_column(default=True)
 
 
 class FaceID(Base):
@@ -30,12 +33,14 @@ class FaceID(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    user: Mapped["User"] = relationship(back_populates="face")
     data: Mapped[str]
+
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
+
+    user: Mapped["User"] = relationship(back_populates="face")
 
 
 class Case(Base):
@@ -46,14 +51,16 @@ class Case(Base):
     investigator: Mapped[User] = relationship(User, lazy="selectin")
     name: Mapped[str]
     description: Mapped[str]
-    material_evidences: Mapped[List["MaterialEvidence"]] = relationship(
-        back_populates="case"
-    )
+    active: Mapped[bool] = mapped_column(default=True)
+
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
-    active: Mapped[bool] = mapped_column(default=True)
+
+    material_evidences: Mapped[List["MaterialEvidence"]] = relationship(
+        back_populates="case"
+    )
 
 
 class MaterialEvidence(Base):
@@ -72,6 +79,17 @@ class MaterialEvidence(Base):
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
+
+
+class Session(Base):
+    __tablename__ = "sessions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user: Mapped[User] = relationship(User)
+    login: Mapped[datetime] = mapped_column(server_default=func.now())
+    logout: Mapped[datetime | None] = mapped_column(onupdate=func.now())
+    active: Mapped[bool] = mapped_column(server_default=expression.true())
 
 
 class Audit(Base):
