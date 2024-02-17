@@ -4,6 +4,8 @@ from PyQt6.QtCore import QDateTime, QTimeZone
 DEBUG = True
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASE_PATH = os.path.join(ROOT_DIR, "database.db")
+ICON_PATH = os.path.join(ROOT_DIR, "assets/icon.png")
+FONTS_DIR = os.path.join(ROOT_DIR, "assets/fonts")
 
 APP_NAME = "E-Aigaq"
 
