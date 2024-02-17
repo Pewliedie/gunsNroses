@@ -159,3 +159,8 @@ class CaseListView(QWidget):
         self.create_form = CaseCreateForm()
         self.create_form.on_save.connect(self.fetch_data)
         self.create_form.show()
+
+    def show_edit_form(self, me_id: int):
+        self.edit_form = CaseEditForm(me_id)
+        self.edit_form.on_save.connect(self.fetch_data)
+        self.edit_form.show()
