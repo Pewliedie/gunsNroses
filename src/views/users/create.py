@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
 )
 
 import src.models as m
-from src.config import NESTED_WINDOW_MIN_WIDTH, RANK_LIST
+from src.config import DIALOG_MIN_WIDTH, RANK_LIST
 from src.db import session
 
 from src.biometrics.recognition import Recognizer
@@ -23,7 +23,7 @@ class UserCreateForm(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('Добавить пользователя')
-        self.setMinimumWidth(NESTED_WINDOW_MIN_WIDTH)
+        self.setMinimumWidth(DIALOG_MIN_WIDTH)
         self.init_ui()
 
     def init_ui(self):

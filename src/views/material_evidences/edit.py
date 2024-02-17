@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 
 import src.models as m
 from src.db import session
-from src.config import NESTED_WINDOW_MIN_WIDTH, NESTED_DIALOG_MIN_HEIGHT, STATUS_LIST
+from src.config import DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT, STATUS_LIST
 
 
 class MaterialEvidenceEditForm(QWidget):
@@ -23,7 +23,7 @@ class MaterialEvidenceEditForm(QWidget):
         super().__init__()
 
         self.setWindowTitle("Редактировать вещ.док")
-        self.setMinimumSize(NESTED_WINDOW_MIN_WIDTH, NESTED_DIALOG_MIN_HEIGHT)
+        self.setMinimumSize(DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT)
 
         self.init_ui(me_id)
 

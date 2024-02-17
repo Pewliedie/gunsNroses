@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
 )
 
 import src.models as m
-from src.config import NESTED_WINDOW_MIN_WIDTH, RANK_LIST
+from src.config import DIALOG_MIN_WIDTH, RANK_LIST
 from src.db import session
 
 from src.biometrics.recognition import Recognizer
@@ -25,7 +25,7 @@ class UserEditForm(QWidget):
         super().__init__()
 
         self.setWindowTitle("Редактировать пользователя")
-        self.setMinimumWidth(NESTED_WINDOW_MIN_WIDTH)
+        self.setMinimumWidth(DIALOG_MIN_WIDTH)
 
         self.init_ui(user_id)
 

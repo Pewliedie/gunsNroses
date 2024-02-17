@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QTimer
 
 import sqlalchemy as sa
-import src.config as config
+from src.config import DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT
 
 from src.models import User
 from src.app import MainWindow
@@ -23,12 +23,7 @@ class AuthenticationView(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Авторизация")
-        self.setMinimumSize(
-            config.LOGIN_WINDOW_MIN_WIDTH, config.LOGIN_WINDOW_MIN_HEIGHT
-        )
-        self.setMaximumSize(
-            config.LOGIN_WINDOW_MIN_WIDTH, config.LOGIN_WINDOW_MIN_HEIGHT
-        )
+        self.setFixedSize(300, 200)
 
         self.username_label = QLabel("Имя пользователя:")
         self.user_select = QComboBox()
