@@ -1,7 +1,7 @@
 # Proof Vault
 
 Требования:
-- Python 3
+- Python 3.11+
 
 Основной стек:
 - PyQt6 - GUI

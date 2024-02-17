@@ -18,6 +18,7 @@ from src.db import session
 from src.views.table_model import TableModel
 from src.widgets.datepicker import DatePickerWidget
 from .create import UserCreateForm
+from .edit import UserEditForm
 
 
 # TODO: пагинация
@@ -108,14 +109,17 @@ class UserListView(QWidget):
             )
         )
         results = session.scalars(query)
+        data = [list(s.UserListItem.from_obj(obj)) for obj in results.all()]
         table_model = TableModel(
-            data=[list(s.UserListItem.from_obj(obj)) for obj in results],
+            data=data,
             headers=self.headers,
         )
         self.table_view.setModel(table_model)
 
-        for i in range(table_model.rowCount(None)):
+        for i in range(len(data)):
+            user_id = data[i][0][1]
             button = QPushButton("✏️")
+            button.clicked.connect(lambda: self.show_edit_form(user_id))
             self.table_view.setIndexWidget(table_model.index(i, 0), button)
 
     def reset(self):
@@ -141,3 +145,8 @@ class UserListView(QWidget):
         self.create_form = UserCreateForm()
         self.create_form.on_save.connect(self.fetch_data)
         self.create_form.show()
+
+    def show_edit_form(self, user_id: int):
+        self.edit_form = UserEditForm(user_id)
+        self.edit_form.on_save.connect(self.fetch_data)
+        self.edit_form.show()

@@ -1,4 +1,12 @@
-from PyQt6.QtWidgets import QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QMessageBox, QComboBox
+from PyQt6.QtWidgets import (
+    QWidget,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+    QMessageBox,
+    QComboBox,
+)
 from PyQt6.QtCore import QTimer
 
 import sqlalchemy as sa
@@ -10,18 +18,23 @@ from src.biometrics.recognition import biometric_auth
 from src.db import session
 from src.schemas import UserSelectItem
 
+
 class AuthenticationView(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Авторизация")
-        self.setMinimumSize(config.LOGIN_WINDOW_MIN_WIDTH, config.LOGIN_WINDOW_MIN_HEIGHT)
-        self.setMaximumSize(config.LOGIN_WINDOW_MIN_WIDTH, config.LOGIN_WINDOW_MIN_HEIGHT)
-        
+        self.setMinimumSize(
+            config.LOGIN_WINDOW_MIN_WIDTH, config.LOGIN_WINDOW_MIN_HEIGHT
+        )
+        self.setMaximumSize(
+            config.LOGIN_WINDOW_MIN_WIDTH, config.LOGIN_WINDOW_MIN_HEIGHT
+        )
+
         self.username_label = QLabel("Имя пользователя:")
         self.user_select = QComboBox()
         self.password_label = QLabel("Пароль:")
         self.password_input = QLineEdit()
-        
+
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
 
         self.users = self.list_users()
@@ -42,7 +55,7 @@ class AuthenticationView(QWidget):
 
         self.session_timer = QTimer()
         self.session_timer.timeout.connect(self.session_expired)
-        self.session_timer.start(300000)  #10 minutes session expiration time
+        self.session_timer.start(300000)  # 10 minutes session expiration time
 
         self.login_button.clicked.connect(self.authenticated_by_password)
         self.face_id_button.clicked.connect(self.authenticated_by_face_id)
@@ -56,30 +69,40 @@ class AuthenticationView(QWidget):
         user_password = self.users[self.user_select.currentIndex()].password
         password = self.password_input.text()
         if user_password == password:
-            self.session_timer.stop()  
-            self.hide() 
+            self.session_timer.stop()
+            self.hide()
             self.open_main_window()
         else:
-            QMessageBox.warning(self, "Ошибка авторизации", "Неверный пароль. Попробуйте снова.")
-            
+            QMessageBox.warning(
+                self, "Ошибка авторизации", "Неверный пароль. Попробуйте снова."
+            )
+
     def authenticated_by_face_id(self):
         try:
             user_id = self.users[self.user_select.currentIndex()].id
             user = session.query(User).filter(User.id == user_id).first()
             authenticated = biometric_auth(user.face.data, str(user.face.id))
         except:
-            QMessageBox.warning(self, "Ошибка авторизации", "Ошибка при аутентификации по FACE ID")
+            QMessageBox.warning(
+                self, "Ошибка авторизации", "Ошибка при аутентификации по FACE ID"
+            )
             authenticated = False
-        
+
         if authenticated:
             self.session_timer.stop()
             self.hide()
             self.open_main_window()
         else:
-            QMessageBox.warning(self, "Ошибка авторизации", "Ошибка при аутентификации по FACE ID")
+            QMessageBox.warning(
+                self, "Ошибка авторизации", "Ошибка при аутентификации по FACE ID"
+            )
 
     def session_expired(self):
-        QMessageBox.warning(self, "Завершение сессии", "Время сессии истекло. Пожалуйста, авторизуйтесь снова")
+        QMessageBox.warning(
+            self,
+            "Завершение сессии",
+            "Время сессии истекло. Пожалуйста, авторизуйтесь снова",
+        )
         self.close()
 
     def open_main_window(self):
