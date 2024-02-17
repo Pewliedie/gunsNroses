@@ -1,5 +1,4 @@
 import sqlalchemy as sa
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QMainWindow, QMessageBox, QTabWidget, QVBoxLayout, QWidget
 
 import src.config as config
@@ -46,7 +45,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
 
         messagebox = QMessageBox()
-        messagebox.setWindowTitle("Подтверждение удаления")
+        messagebox.setWindowTitle("Подтверждение выхода")
         messagebox.setText("Вы уверены, что хотите выйти?")
 
         messagebox.addButton("Да", QMessageBox.ButtonRole.YesRole)
@@ -65,10 +64,3 @@ class MainWindow(QMainWindow):
             session.commit()
 
         return super().closeEvent(event)
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Return:
-            # обработка введенных данных
-            self.scanned_barcode = ""
-        elif event.text():
-            self.scanned_barcode += event.text()

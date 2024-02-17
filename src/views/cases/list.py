@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 import sqlalchemy as sa
-from PyQt6.QtCore import QDateTime
+from PyQt6.QtCore import QDateTime, Qt
 from PyQt6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -224,3 +224,10 @@ class CaseListView(QWidget):
 
         rows = self.get_export_data()
         export_to_pdf(headers=export_headers, rows=rows, file_path=file_path)
+
+    # def keyPressEvent(self, event):
+    #     if event.key() == Qt.Key.Key_Return:
+    #         # обработка введенных данных
+    #         self.scanned_barcode = ""
+    #     elif event.text():
+    #         self.scanned_barcode += event.text()
