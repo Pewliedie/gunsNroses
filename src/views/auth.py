@@ -117,8 +117,16 @@ class AuthenticationView(QWidget):
             authenticated = False
 
         if authenticated:
-            active_session = Session(user=user)
-            session.add(active_session)
+            # Deactivate all active sessions
+            _sessions = session.query(Session).filter(Session.active.is_(True)).all()
+            for active_session in _sessions:
+                active_session.active = False
+                if session.is_modified(active_session):
+                    session.commit()
+
+            # Create new active session
+            new_active_session = Session(user=user)
+            session.add(new_active_session)
             session.commit()
             self.open_main_window()
 

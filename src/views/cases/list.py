@@ -77,6 +77,7 @@ class CaseListView(QWidget):
         self.investigator_filter = FilterWidget(
             "Следователь", m.User, s.UserSelectItem, self.set_investigator
         )
+
         self.from_date_filter = DatePickerWidget(
             "Создан (От)", self.from_date, self.set_from_date
         )

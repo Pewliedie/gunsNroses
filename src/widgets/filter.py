@@ -1,5 +1,6 @@
 import sqlalchemy as sa
-from PyQt6.QtWidgets import QComboBox, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QComboBox, QCompleter, QLabel, QVBoxLayout, QWidget
 
 from src.db import session
 
@@ -10,12 +11,20 @@ class FilterWidget(QWidget):
         self.options = self.fetch_options(model, schema)
         self.on_change = on_change
 
+        option_items = [str(option) for option in self.options]
+
         layout = QVBoxLayout()
         self.setLayout(layout)
 
         label = QLabel(label)
         self.select = QComboBox()
-        self.select.addItems([str(option) for option in self.options])
+        self.select.setEditable(True)
+        self.select.addItems(option_items)
+
+        completer = QCompleter(option_items)
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+
+        self.select.setCompleter(completer)
         self.select.setCurrentIndex(-1)
 
         layout.addWidget(label)

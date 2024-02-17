@@ -30,13 +30,14 @@ class UserEditForm(QWidget):
 
     def init_ui(self, user_id: int):
         self.user = self.get_data(user_id)
+        self.face = self.get_face_date(user_id)
 
         if not self.user:
             QMessageBox.critical(self, "Ошибка", "Пользователь не найден")
             self.close()
             return
 
-        self.encoding_image_data = "empty_data"
+        self.encoding_image_data = self.face.data
         first_name_label = QLabel("Имя")
         self.first_name_input = QLineEdit(self.user.first_name)
 
@@ -94,6 +95,11 @@ class UserEditForm(QWidget):
         result: m.User | None = session.scalar(query)
         return result
 
+    def get_face_date(self, entity_id: int) -> m.FaceID | None:
+        query = sa.select(m.FaceID).where(m.FaceID.user_id == entity_id)
+        result: m.FaceID | None = session.scalar(query)
+        return result
+
     def validate(self):
         error_messages = []
 
@@ -122,22 +128,19 @@ class UserEditForm(QWidget):
         if not valid:
             return
 
-        user = m.User(
-            first_name=self.first_name_input.text(),
-            last_name=self.last_name_input.text(),
-            phone_number=self.phone_number_input.text(),
-            rank=self.rank_combobox.currentText(),
-        )
+        self.user.first_name = self.first_name_input.text()
+        self.user.last_name = self.last_name_input.text()
+        self.user.phone_number = self.phone_number_input.text()
+        self.user.rank = self.rank_combobox.currentText()
 
-        user.set_password(self.password_input.text())
+        self.user.set_password(self.password_input.text())
 
-        face_id = m.FaceID(user=user, data=self.encoding_image_data)
+        self.face.data = self.encoding_image_data
 
-        session.add(user)
-        session.add(face_id)
-        session.commit()
+        if session.is_modified(self.user) or session.is_modified(self.face):
+            session.commit()
+            self.on_save.emit()
 
-        self.on_save.emit()
         self.close()
 
     def open_image(self):

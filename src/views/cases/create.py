@@ -1,8 +1,9 @@
 import sqlalchemy as sa
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
+    QCompleter,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -51,7 +52,12 @@ class CaseCreateForm(QWidget):
         )
 
         self.users = self.list_users()
+        user_items = [str(user) for user in self.users]
         self.user_select.addItems([str(user) for user in self.users])
+        self.user_select.setEditable(True)
+        completer = QCompleter(user_items)
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.user_select.setCompleter(completer)
 
         save_button = QPushButton("Сохранить")
 

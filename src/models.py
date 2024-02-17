@@ -94,6 +94,23 @@ class MaterialEvidence(Base):
     active: Mapped[bool] = mapped_column(server_default=expression.true())
 
 
+class MaterialEvidenceEvent(Base):
+    __tablename__ = "material_evidence_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    material_evidence_id: Mapped[int] = mapped_column(
+        ForeignKey("material_evidence.id")
+    )
+    material_evidence: Mapped[MaterialEvidence] = relationship(MaterialEvidence)
+    event_type: Mapped[str]
+    description: Mapped[str]
+    created: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated: Mapped[datetime] = mapped_column(
+        server_default=func.now(), onupdate=func.now()
+    )
+    active: Mapped[bool] = mapped_column(server_default=expression.true())
+
+
 class Session(Base):
     __tablename__ = "sessions"
 
