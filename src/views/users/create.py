@@ -7,11 +7,14 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QComboBox,
     QMessageBox,
+    QFileDialog
 )
 
 import src.models as m
 from src.config import NESTED_WINDOW_MIN_WIDTH, RANK_LIST
 from src.db import session
+from src.biometrics.recognition import Recognition
+
 
 
 class UserCreateForm(QWidget):
@@ -24,6 +27,8 @@ class UserCreateForm(QWidget):
         self.init_ui()
 
     def init_ui(self):
+        
+        self.encoding_image_data = 'empty_data'
         first_name_label = QLabel("Имя")
         self.first_name_input = QLineEdit()
 
@@ -34,10 +39,14 @@ class UserCreateForm(QWidget):
         self.phone_number_input = QLineEdit()
         self.phone_number_input.setInputMask("+7-000-000-00-00")
 
+        password_label = QLabel("Пароль пользователя")
+        self.password_input = QLineEdit()
+
         rank_label = QLabel("Звание")
         self.rank_combobox = QComboBox()
         self.rank_combobox.addItems(RANK_LIST)
 
+        open_image_button = QPushButton("Добавить изображение (Face ID)")
         save_button = QPushButton("Сохранить")
 
         layout = QVBoxLayout()
@@ -51,13 +60,19 @@ class UserCreateForm(QWidget):
         layout.addWidget(phone_number_label)
         layout.addWidget(self.phone_number_input)
 
+        layout.addWidget(password_label)
+        layout.addWidget(self.password_input)
+
         layout.addWidget(rank_label)
         layout.addWidget(self.rank_combobox)
 
+        
+        layout.addWidget(open_image_button)
         layout.addWidget(save_button)
 
         self.setLayout(layout)
 
+        open_image_button.clicked.connect(self.open_image)
         save_button.clicked.connect(self.save)
 
     def validate(self):
@@ -71,6 +86,9 @@ class UserCreateForm(QWidget):
 
         if not self.phone_number_input.text():
             error_messages.append("Номер телефона обязательное поле")
+        
+        if not self.password_input.text():
+            error_messages.append("Пароль обязательное поле")
 
         if error_messages:
             messagebox = QMessageBox()
@@ -89,10 +107,27 @@ class UserCreateForm(QWidget):
             first_name=self.first_name_input.text(),
             last_name=self.last_name_input.text(),
             phone_number=self.phone_number_input.text(),
+            password=self.password_input.text(),
             rank=self.rank_combobox.currentText(),
         )
+        
+        face_id = m.FaceID(user=user, data = self.encoding_image_data)
+
         session.add(user)
+        session.add(face_id)
         session.commit()
 
         self.on_save.emit()
         self.close()
+
+    def open_image(self):
+        dialog = QFileDialog()
+        dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
+        dialog.setNameFilter("*.jpg")
+        dialogSuccess = dialog.exec()
+
+        reco = Recognition()
+        if dialogSuccess:
+            image_path = dialog.selectedFiles()[0]
+            self.encoding_image_data = reco.encode_image(image_path)
+            print(self.encoding_image_data)

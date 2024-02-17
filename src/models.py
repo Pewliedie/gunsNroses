@@ -12,6 +12,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    password: Mapped[str]
     first_name: Mapped[str]
     last_name: Mapped[str]
     phone_number: Mapped[str]
@@ -20,15 +21,16 @@ class User(Base):
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
+    face_id: Mapped["FaceID"] = relationship("FaceID", back_populates="user")
     active: Mapped[bool] = mapped_column(default=True)
 
 
-class Fingerprint(Base):
-    __tablename__ = "fingerprints"
+class FaceID(Base):
+    __tablename__ = "face_ids"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    user: Mapped[User] = relationship(User)
+    user: Mapped["User"] = relationship(back_populates="face_id")
     data: Mapped[str]
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(

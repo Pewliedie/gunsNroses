@@ -34,6 +34,9 @@ class UserCreateForm(QWidget):
         phone_number_label = QLabel("Номер телефона")
         self.phone_number_input = QLineEdit()
 
+        password_label = QLabel("Пароль пользователя")
+        self.password_input = QLineEdit()
+
         rank_label = QLabel("Звание")
         self.rank_combobox = QComboBox()
         self.rank_combobox.addItems(RANK_LIST)
@@ -72,6 +75,9 @@ class UserCreateForm(QWidget):
         if not self.phone_number_input.text():
             error_messages.append("Номер телефона обязательное поле")
 
+        if not self.password_input.text():
+            error_messages.append("Пароль обязательное поле")
+
         if error_messages:
             messagebox = QMessageBox()
             messagebox.critical(self, "Ошибка валидации", "\n".join(error_messages))
@@ -89,6 +95,7 @@ class UserCreateForm(QWidget):
             first_name=self.first_name_input.text(),
             last_name=self.last_name_input.text(),
             phone_number=self.phone_number_input.text(),
+            password=self.password_input.text(),
             rank=self.phone_number_input.text(),
         )
         session.add(user)
