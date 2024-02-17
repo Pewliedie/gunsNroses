@@ -1,14 +1,15 @@
+import sqlalchemy as sa
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
-    QWidget,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QVBoxLayout,
-    QMessageBox,
     QComboBox,
     QCompleter,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt6.QtCore import QTimer, Qt
 
 import sqlalchemy as sa
 
@@ -16,7 +17,9 @@ from src.models import User, Session
 from src.app import MainWindow
 from src.biometrics.recognition import biometric_auth
 from src.db import session
+from src.models import Session, User
 from src.schemas import UserSelectItem
+
 from .users.create import UserCreateForm
 
 
@@ -70,6 +73,7 @@ class AuthenticationView(QWidget):
 
     def fetch_users(self):
         self.users = self.list_users()
+
         self.user_select.addItems([str(user) for user in self.users])
 
         completer = QCompleter([str(user) for user in self.users])
@@ -86,10 +90,18 @@ class AuthenticationView(QWidget):
 
     def authenticated_by_password(self):
 
-        user_password = self.users[self.user_select.currentIndex()].password
+        user_id = self.users[self.user_select.currentIndex()].id
+        user = session.scalar(sa.select(User).where(User.id == user_id))
+
+        if not user:
+            QMessageBox.warning(
+                self, "Ошибка авторизации", "Пользователь не найден. Попробуйте снова."
+            )
+            return
+
         password = self.password_input.text()
 
-        if user_password == password:
+        if user.check_password(password):
             self.open_main_window()
         else:
             QMessageBox.warning(
@@ -114,7 +126,7 @@ class AuthenticationView(QWidget):
                 active_session.active = False
                 if session.is_modified(active_session):
                     session.commit()
-                    
+
             # Create new active session
             new_active_session = Session(user=user)
             session.add(new_active_session)

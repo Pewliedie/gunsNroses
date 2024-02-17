@@ -1,23 +1,23 @@
 import sqlalchemy as sa
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
-    QWidget,
+    QAbstractItemView,
+    QComboBox,
+    QCompleter,
     QLabel,
     QLineEdit,
+    QListWidget,
+    QMessageBox,
+    QPushButton,
     QTextEdit,
     QVBoxLayout,
-    QPushButton,
-    QComboBox,
-    QMessageBox,
-    QListWidget,
-    QAbstractItemView,
-    QCompleter
+    QWidget,
 )
 
 import src.models as m
-from src.config import DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT
+from src.config import DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH
 from src.db import session
-from src.schemas import UserSelectItem, MaterialEvidenceSelectItem
+from src.schemas import MaterialEvidenceSelectItem, UserSelectItem
 
 
 class CaseCreateForm(QWidget):

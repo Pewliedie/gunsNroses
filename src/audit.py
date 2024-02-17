@@ -1,12 +1,11 @@
-from datetime import date, datetime
 import json
 import typing as t
+from datetime import date, datetime
 
 import sqlalchemy as sa
 from sqlalchemy.event import listens_for
 
 import src.models as m
-
 
 AUDITED_MODELS = (
     m.User,

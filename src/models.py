@@ -1,10 +1,12 @@
 from datetime import datetime
+from typing import List
 
 import sqlalchemy as sa
+from passlib.hash import pbkdf2_sha256
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import expression, func
-from typing import List
+
 from src.db import Base
 
 
@@ -12,7 +14,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    password: Mapped[str]
+    password_hash: Mapped[str]
     first_name: Mapped[str]
     last_name: Mapped[str]
     phone_number: Mapped[str]
@@ -24,9 +26,17 @@ class User(Base):
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
-
+    cases: Mapped[List["Case"]] = relationship(
+        "Case", back_populates="investigator", lazy="selectin"
+    )
     face: Mapped["FaceID"] = relationship("FaceID", back_populates="user")
     active: Mapped[bool] = mapped_column(server_default=expression.true())
+
+    def set_password(self, password):
+        self.password_hash = pbkdf2_sha256.hash(password)
+
+    def check_password(self, password):
+        return pbkdf2_sha256.verify(password, self.password_hash)
 
 
 class FaceID(Base):
@@ -83,6 +93,7 @@ class MaterialEvidence(Base):
     )
     active: Mapped[bool] = mapped_column(server_default=expression.true())
 
+
 class MaterialEvidenceEvent(Base):
     __tablename__ = "material_evidence_events"
 
@@ -108,6 +119,7 @@ class Session(Base):
     login: Mapped[datetime] = mapped_column(server_default=func.now())
     logout: Mapped[datetime | None] = mapped_column(onupdate=func.now())
     active: Mapped[bool] = mapped_column(server_default=expression.true())
+
 
 class AuditEntry(Base):
     __tablename__ = "audit_entries"

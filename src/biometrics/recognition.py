@@ -1,7 +1,8 @@
-import face_recognition
-import cv2
-import numpy as np
 import json
+
+import cv2
+import face_recognition
+import numpy as np
 
 
 class Recognizer:
@@ -62,7 +63,7 @@ def biometric_auth(face_encodings, id):
     cap = cv2.VideoCapture(0)
 
     while True:
-        ret, frame = cap.read()
+        _, frame = cap.read()
 
         # Detect Faces
         face_locations, face_names = reco.detect_known_faces(frame)

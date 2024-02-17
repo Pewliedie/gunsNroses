@@ -1,24 +1,38 @@
 from datetime import timedelta
+
 import sqlalchemy as sa
+from PyQt6.QtCore import QDateTime, Qt
 from PyQt6.QtWidgets import (
+    QFileDialog,
     QHBoxLayout,
+    QHeaderView,
     QLineEdit,
     QPushButton,
     QTableView,
     QVBoxLayout,
     QWidget,
-    QHeaderView,
 )
-from PyQt6.QtCore import QDateTime
-from src.config import TODAY
 
 import src.models as m
+import src.schemas as s
+from src.config import DESKTOP_PATH, TODAY
 from src.db import session
-from src.schemas import CaseListItem, UserSelectItem
+from src.report import export_to_pdf, export_to_xlsx
 from src.views.cases.edit import CaseEditForm
 from src.views.table_model import TableModel
-from src.widgets import FilterWidget, DatePickerWidget
+from src.widgets import DatePickerWidget, FilterWidget
+
 from .create import CaseCreateForm
+
+export_headers = [
+    "ID",
+    "Наименование",
+    "Следователь",
+    "Вещ.доказательства",
+    "Дата создания",
+    "Дата обновления",
+    "Активно",
+]
 
 
 # TODO: пагинация
@@ -50,14 +64,18 @@ class CaseListView(QWidget):
         search_button = QPushButton("Поиск")
         reset_button = QPushButton("Сбросить")
         add_button = QPushButton("Добавить")
+        export_xlsx_button = QPushButton("Экспорт в Excel")
+        export_pdf_button = QPushButton("Экспорт в PDF")
 
         controls_layout.addWidget(self.search_input)
         controls_layout.addWidget(search_button)
         controls_layout.addWidget(reset_button)
         controls_layout.addWidget(add_button)
+        controls_layout.addWidget(export_xlsx_button)
+        controls_layout.addWidget(export_pdf_button)
 
         self.investigator_filter = FilterWidget(
-            "Следователь", m.User, UserSelectItem, self.set_investigator
+            "Следователь", m.User, s.UserSelectItem, self.set_investigator
         )
 
         self.from_date_filter = DatePickerWidget(
@@ -79,7 +97,7 @@ class CaseListView(QWidget):
             "Дата создания",
             "Дата обновления",
         ]
-        self.fetch_data()
+        self.refresh_table()
 
         header = self.table_view.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -89,9 +107,11 @@ class CaseListView(QWidget):
         layout.addWidget(filters)
         layout.addWidget(self.table_view)
 
-        search_button.clicked.connect(self.fetch_data)
+        search_button.clicked.connect(self.refresh_table)
         reset_button.clicked.connect(self.reset)
         add_button.clicked.connect(self.show_create_form)
+        export_xlsx_button.clicked.connect(self.export_xlsx)
+        export_pdf_button.clicked.connect(self.export_pdf)
 
     def fetch_data(self):
         query = sa.select(m.Case)
@@ -117,7 +137,11 @@ class CaseListView(QWidget):
         )
         query = query.order_by(m.Case.created.desc())
         results = session.scalars(query)
-        data = [list(CaseListItem.from_obj(obj)) for obj in results]
+        return results.all()
+
+    def refresh_table(self):
+        raw_data = self.fetch_data()
+        data = [list(s.CaseListItem.from_obj(obj)) for obj in raw_data]
         table_model = TableModel(
             data=data,
             headers=self.headers,
@@ -142,26 +166,68 @@ class CaseListView(QWidget):
         self.from_date_filter.datepicker.setDateTime(self.from_date)
         self.to_date_filter.datepicker.setDateTime(self.to_date)
 
-        self.fetch_data()
+        self.refresh_table()
 
     def set_investigator(self, investigator_id: int):
         self.investigator_id = investigator_id
-        self.fetch_data()
+        self.refresh_table()
 
     def set_from_date(self, dt: QDateTime):
         self.from_date = dt
-        self.fetch_data()
+        self.refresh_table()
 
     def set_to_date(self, dt: QDateTime):
         self.to_date = dt
-        self.fetch_data()
+        self.refresh_table()
 
     def show_create_form(self):
         self.create_form = CaseCreateForm()
-        self.create_form.on_save.connect(self.fetch_data)
+        self.create_form.on_save.connect(self.refresh_table)
         self.create_form.show()
 
-    def show_edit_form(self, me_id: int):
-        self.edit_form = CaseEditForm(me_id)
-        self.edit_form.on_save.connect(self.fetch_data)
+    def show_edit_form(self, user_id: int):
+        self.edit_form = CaseEditForm(user_id)
+        self.edit_form.on_save.connect(self.refresh_table)
         self.edit_form.show()
+
+    def get_export_data(self):
+        raw_data = self.fetch_data()
+        dumped_data = [
+            s.CaseExportItem.from_obj(obj).model_dump(mode="json") for obj in raw_data
+        ]
+        rows = [list(d.values()) for d in dumped_data]
+        return rows
+
+    def get_file_path(self, file_type: str):
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Сохранить файл",
+            DESKTOP_PATH + f"/cases.{file_type}",
+            f"Файлы {file_type} (*.{file_type})",
+        )
+        return file_path
+
+    def export_xlsx(self):
+        file_path = self.get_file_path("xlsx")
+
+        if not file_path:
+            return
+
+        rows = self.get_export_data()
+        export_to_xlsx(headers=export_headers, rows=rows, file_path=file_path)
+
+    def export_pdf(self):
+        file_path = self.get_file_path("pdf")
+
+        if not file_path:
+            return
+
+        rows = self.get_export_data()
+        export_to_pdf(headers=export_headers, rows=rows, file_path=file_path)
+
+    # def keyPressEvent(self, event):
+    #     if event.key() == Qt.Key.Key_Return:
+    #         # обработка введенных данных
+    #         self.scanned_barcode = ""
+    #     elif event.text():
+    #         self.scanned_barcode += event.text()

@@ -1,6 +1,6 @@
 import sqlalchemy as sa
-from PyQt6.QtWidgets import QVBoxLayout, QWidget, QLabel, QComboBox, QCompleter
 from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QComboBox, QCompleter, QLabel, QVBoxLayout, QWidget
 
 from src.db import session
 

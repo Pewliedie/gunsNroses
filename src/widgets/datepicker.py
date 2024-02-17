@@ -1,6 +1,7 @@
 from typing import Callable
-from PyQt6.QtWidgets import QVBoxLayout, QWidget, QLabel, QDateEdit
+
 from PyQt6.QtCore import QDateTime
+from PyQt6.QtWidgets import QDateEdit, QLabel, QVBoxLayout, QWidget
 
 
 class DatePickerWidget(QWidget):

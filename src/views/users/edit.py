@@ -1,21 +1,20 @@
 import sqlalchemy as sa
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
-    QWidget,
+    QComboBox,
+    QFileDialog,
     QLabel,
     QLineEdit,
-    QVBoxLayout,
-    QPushButton,
-    QComboBox,
     QMessageBox,
-    QFileDialog,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
 import src.models as m
+from src.biometrics.recognition import Recognizer
 from src.config import DIALOG_MIN_WIDTH, RANK_LIST
 from src.db import session
-
-from src.biometrics.recognition import Recognizer
 
 
 class UserEditForm(QWidget):
@@ -50,7 +49,7 @@ class UserEditForm(QWidget):
         self.phone_number_input.setInputMask("+7-000-000-00-00")
 
         password_label = QLabel("Пароль пользователя")
-        self.password_input = QLineEdit(self.user.password)
+        self.password_input = QLineEdit()
 
         rank_label = QLabel("Звание")
         self.rank_combobox = QComboBox()
@@ -132,15 +131,16 @@ class UserEditForm(QWidget):
         self.user.first_name = self.first_name_input.text()
         self.user.last_name = self.last_name_input.text()
         self.user.phone_number = self.phone_number_input.text()
-        self.user.password = self.password_input.text()
         self.user.rank = self.rank_combobox.currentText()
 
+        self.user.set_password(self.password_input.text())
+
         self.face.data = self.encoding_image_data
-       
+
         if session.is_modified(self.user) or session.is_modified(self.face):
             session.commit()
             self.on_save.emit()
-            
+
         self.close()
 
     def open_image(self):
