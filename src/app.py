@@ -31,16 +31,27 @@ class MainWindow(QMainWindow):
         main_widget = QWidget()
         main_layout = QVBoxLayout()
 
-        tab = QTabWidget()
+        self.tab = QTabWidget()
 
-        tab.addTab(CaseListView(), "Дела")
-        tab.addTab(MaterialEvidenceListView(), "Вещ.доки")
-        tab.addTab(UserListView(), "Пользователи")
+        self.tab.addTab(CaseListView(), "Дела")
+        self.tab.addTab(MaterialEvidenceListView(), "Вещ.доки")
+        self.tab.addTab(UserListView(), "Пользователи")
 
-        main_layout.addWidget(tab)
+        self.tab.currentChanged.connect(self.reset_list_view)
+    
+        main_layout.addWidget(self.tab)
         main_widget.setLayout(main_layout)
 
         self.setCentralWidget(main_widget)
+
+    def reset_list_view(self, index):
+        list_view = self.tab.widget(index)
+        if isinstance(list_view, CaseListView):
+            list_view.reset()
+        elif isinstance(list_view, MaterialEvidenceListView):
+            list_view.reset()
+        elif isinstance(list_view, UserListView):
+            list_view.reset()
 
     def closeEvent(self, event):
 
