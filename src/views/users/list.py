@@ -93,7 +93,7 @@ class UserListView(QWidget):
             "Дата создания",
             "Дата обновления",
         ]
-        self.refresh_table()
+        self.refresh()
 
         header = self.table_view.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -103,7 +103,7 @@ class UserListView(QWidget):
         layout.addWidget(filters)
         layout.addWidget(self.table_view)
 
-        search_button.clicked.connect(self.refresh_table)
+        search_button.clicked.connect(self.refresh)
         reset_button.clicked.connect(self.reset)
         add_button.clicked.connect(self.show_create_form)
         export_xlsx_button.clicked.connect(self.export_xlsx)
@@ -131,7 +131,7 @@ class UserListView(QWidget):
         results = session.scalars(query)
         return results.all()
 
-    def refresh_table(self):
+    def refresh(self):
         raw_data = self.fetch_data()
         data = [list(s.UserListItem.from_obj(obj)) for obj in raw_data]
         table_model = TableModel(
@@ -141,10 +141,14 @@ class UserListView(QWidget):
         self.table_view.setModel(table_model)
 
         for i in range(len(data)):
-            user_id = data[i][0][1]
+            entity_id = data[i][0][1]
             button = QPushButton("✏️")
-            button.clicked.connect(lambda: self.show_edit_form(user_id))
+            button.clicked.connect(
+                lambda _, user_id=entity_id: self.show_edit_form(user_id)
+            )
             self.table_view.setIndexWidget(table_model.index(i, 0), button)
+
+        return len(data)
 
     def reset(self):
         self.search_input.clear()
@@ -155,24 +159,24 @@ class UserListView(QWidget):
         self.from_date_filter.datepicker.setDateTime(self.from_date)
         self.to_date_filter.datepicker.setDateTime(self.to_date)
 
-        self.refresh_table()
+        self.refresh()
 
     def set_from_date(self, dt: QDateTime):
         self.from_date = dt
-        self.refresh_table()
+        self.refresh()
 
     def set_to_date(self, dt: QDateTime):
         self.to_date = dt
-        self.refresh_table()
+        self.refresh()
 
     def show_create_form(self):
         self.create_form = UserCreateForm()
-        self.create_form.on_save.connect(self.refresh_table)
+        self.create_form.on_save.connect(self.refresh)
         self.create_form.show()
 
     def show_edit_form(self, user_id: int):
         self.edit_form = UserEditForm(user_id)
-        self.edit_form.on_save.connect(self.refresh_table)
+        self.edit_form.on_save.connect(self.refresh)
         self.edit_form.show()
 
     def get_export_data(self):

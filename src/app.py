@@ -15,19 +15,29 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.error = False
+
         try:
             self.init_ui()
         except Exception as e:
+            self.error = True
             QMessageBox.critical(
                 self,
                 "Ошибка",
-                f"Возникла ошибка в ходе работы приложения"
-                f"Обратитесь в тех.поддержку"
+                f"Возникла ошибка в ходе работы приложения. "
+                f"Обратитесь в тех.поддержку. "
                 f"Подробнее: {e}",
             )
             self.close()
 
     def init_ui(self):
+        current_session = self.get_current_session()
+
+        if not current_session:
+            QMessageBox.critical(self, "Ошибка", "Не удалось получить сессию")
+            self.close()
+            return
+
         self.setWindowTitle(config.APP_NAME)
         self.setMinimumSize(config.MAIN_WINDOW_MIN_WIDTH, config.MAIN_WINDOW_MIN_HEIGHT)
 
@@ -38,43 +48,64 @@ class MainWindow(QMainWindow):
 
         self.tab.addTab(CaseListView(), "Дела")
         self.tab.addTab(MaterialEvidenceListView(), "Вещ.доки")
-        self.tab.addTab(UserListView(), "Пользователи")
 
-        self.tab.currentChanged.connect(self.reset_list_view)
-    
+        if current_session.user.is_superuser:
+            self.tab.addTab(UserListView(), "Пользователи")
+
+        self.tab.currentChanged.connect(self.refresh_list_view)
+
         main_layout.addWidget(self.tab)
         main_widget.setLayout(main_layout)
 
         self.setCentralWidget(main_widget)
 
-    def reset_list_view(self, index):
+    def show(self):
+        if self.error:
+            return
+        return super().show()
+
+    def get_current_session(self):
+        query = sa.select(Session).where(Session.active.is_(True))
+        return session.scalars(query).first()
+
+    def refresh_list_view(self, index):
         list_view = self.tab.widget(index)
-        if isinstance(list_view, CaseListView):
-            list_view.reset()
-        elif isinstance(list_view, MaterialEvidenceListView):
-            list_view.reset()
-        elif isinstance(list_view, UserListView):
-            list_view.reset()
+
+        if isinstance(
+            list_view, (CaseListView, MaterialEvidenceListView, UserListView)
+        ):
+            list_view.refresh()
 
     def closeEvent(self, event):
-
         messagebox = QMessageBox()
         messagebox.setWindowTitle("Подтверждение выхода")
         messagebox.setText("Вы уверены, что хотите выйти?")
 
-        messagebox.addButton("Да", QMessageBox.ButtonRole.YesRole)
-        messagebox.addButton("Нет", QMessageBox.ButtonRole.NoRole)
+        messagebox.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        messagebox.setDefaultButton(QMessageBox.StandardButton.Yes)
+
+        messagebox.button(QMessageBox.StandardButton.Yes).setText("Да")
+        messagebox.button(QMessageBox.StandardButton.No).setText("Нет")
 
         response = messagebox.exec()
 
-        if response == QMessageBox.ButtonRole.NoRole:
+        if response == QMessageBox.StandardButton.Yes:
+            event.accept()
+        else:
+            event.ignore()
             return
 
-        query = sa.select(Session).where(Session.active.is_(True))
+        query = (
+            sa.select(Session)
+            .where(Session.active.is_(True))
+            .order_by(Session.login.desc())
+        )
+
         active_session = session.scalars(query).first()
         active_session.active = False
 
-        if session.is_modified(active_session):
-            session.commit()
+        session.commit()
 
         return super().closeEvent(event)

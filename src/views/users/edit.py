@@ -23,6 +23,8 @@ class UserEditForm(QWidget):
     def __init__(self, user_id: int):
         super().__init__()
 
+        self.error = False
+
         self.setWindowTitle("Редактировать пользователя")
         self.setMinimumWidth(DIALOG_MIN_WIDTH)
 
@@ -32,6 +34,7 @@ class UserEditForm(QWidget):
         self.user = self.get_data(user_id)
 
         if not self.user:
+            self.error = True
             QMessageBox.critical(self, "Ошибка", "Пользователь не найден")
             self.close()
             return
@@ -89,6 +92,11 @@ class UserEditForm(QWidget):
         open_image_button.clicked.connect(self.open_image)
         save_button.clicked.connect(self.save)
         delete_button.clicked.connect(self.delete)
+
+    def show(self):
+        if self.error:
+            return
+        return super().show()
 
     def get_data(self, entity_id: int) -> m.User | None:
         query = sa.select(m.User).where(m.User.id == entity_id)

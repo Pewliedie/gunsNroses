@@ -24,6 +24,8 @@ class CaseEditForm(QWidget):
 
     def __init__(self, case_id: int):
         super().__init__()
+
+        self.error = False
         self.selected_material_evidences = []
 
         self.setWindowTitle("Редактировать дело")
@@ -35,6 +37,7 @@ class CaseEditForm(QWidget):
         self.case = self.get_data(case_id)
 
         if not self.case:
+            self.error = True
             QMessageBox.critical(self, "Ошибка", "Дело не найдено")
             self.close()
             return
@@ -98,6 +101,11 @@ class CaseEditForm(QWidget):
         )
         save_button.clicked.connect(self.save)
         delete_button.clicked.connect(self.delete)
+
+    def show(self):
+        if self.error:
+            return
+        return super().show()
 
     def get_data(self, entity_id: int) -> m.Case | None:
         query = sa.select(m.Case).where(m.Case.id == entity_id)

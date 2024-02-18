@@ -1,4 +1,3 @@
-from PyQt6.QtGui import QKeyEvent
 import sqlalchemy as sa
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
@@ -12,9 +11,6 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-import sqlalchemy as sa
-
-from src.models import User, Session
 from src.app import MainWindow
 from src.biometrics.recognition import biometric_auth
 from src.db import session

@@ -21,6 +21,8 @@ class MaterialEvidenceEditForm(QWidget):
     def __init__(self, me_id: int):
         super().__init__()
 
+        self.error = False
+
         self.setWindowTitle("Редактировать вещ.док")
         self.setMinimumSize(DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT)
 
@@ -30,6 +32,7 @@ class MaterialEvidenceEditForm(QWidget):
         self.material_evidence = self.get_data(me_id)
 
         if not self.material_evidence:
+            self.error = True
             QMessageBox.critical(self, "Ошибка", "Вещ.док не найден")
             self.close()
             return
@@ -72,6 +75,11 @@ class MaterialEvidenceEditForm(QWidget):
         return_button.clicked.connect(self.return_event)
         take_button.clicked.connect(self.take_event)
         destroy_button.clicked.connect(self.destroy_event)
+
+    def show(self):
+        if self.error:
+            return
+        return super().show()
 
     def get_data(self, entity_id: int) -> m.MaterialEvidence | None:
         query = sa.select(m.MaterialEvidence).where(m.MaterialEvidence.id == entity_id)

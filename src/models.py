@@ -4,7 +4,9 @@ from typing import List
 
 import sqlalchemy as sa
 from passlib.hash import pbkdf2_sha256
-from sqlalchemy import ForeignKey, Enum as SAEnum, Column
+from sqlalchemy import Column
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import expression, func
 
@@ -90,7 +92,7 @@ class MaterialEvidence(Base):
     description: Mapped[str]
     status = Column(
         SAEnum(MaterialEvidenceStatus),
-        default=MaterialEvidenceStatus.IN_STORAGE,
+        default=MaterialEvidenceStatus.IN_STORAGE.value,
         nullable=False,
     )
     barcode: Mapped[int]

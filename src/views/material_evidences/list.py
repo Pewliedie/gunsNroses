@@ -1,17 +1,17 @@
 from datetime import timedelta
 
 import sqlalchemy as sa
-from PyQt6.QtCore import QDateTime, Qt, QEvent
+from PyQt6.QtCore import QDateTime, QEvent, Qt
 from PyQt6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QHeaderView,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QTableView,
     QVBoxLayout,
     QWidget,
-    QMessageBox,
 )
 
 import src.models as m
@@ -102,7 +102,7 @@ class MaterialEvidenceListView(QWidget):
             "Дата обновления",
         ]
 
-        self.refresh_table()
+        self.refresh()
 
         header = self.table_view.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -112,7 +112,7 @@ class MaterialEvidenceListView(QWidget):
         layout.addWidget(filters)
         layout.addWidget(self.table_view)
 
-        search_button.clicked.connect(self.refresh_table)
+        search_button.clicked.connect(self.refresh)
         reset_button.clicked.connect(self.reset)
         add_button.clicked.connect(self.show_create_form)
         search_by_qr_button.clicked.connect(self.search_by_qr)
@@ -151,7 +151,7 @@ class MaterialEvidenceListView(QWidget):
         results = session.scalars(query)
         return results
 
-    def refresh_table(self):
+    def refresh(self):
         raw_data = self.fetch_data()
 
         data = [
@@ -165,9 +165,11 @@ class MaterialEvidenceListView(QWidget):
         self.table_view.setModel(table_model)
 
         for i in range(len(data)):
-            me_id = data[i][0][1]
+            entity_id = data[i][0][1]
             button = QPushButton("✏️")
-            button.clicked.connect(lambda: self.show_edit_form(me_id))
+            button.clicked.connect(
+                lambda _, me_id=entity_id: self.show_edit_form(me_id)
+            )
             self.table_view.setIndexWidget(table_model.index(i, 0), button)
 
         return len(data)
@@ -190,28 +192,28 @@ class MaterialEvidenceListView(QWidget):
 
     def reset(self):
         self.reset_params()
-        self.refresh_table()
+        self.refresh()
 
     def set_case(self, case_id: int):
         self.case_id = case_id
-        self.refresh_table()
+        self.refresh()
 
     def set_from_date(self, dt: QDateTime):
         self.from_date = dt
-        self.refresh_table()
+        self.refresh()
 
     def set_to_date(self, dt: QDateTime):
         self.to_date = dt
-        self.refresh_table()
+        self.refresh()
 
     def show_create_form(self):
         self.create_form = MaterialEvidenceCreateForm()
-        self.create_form.on_save.connect(self.refresh_table)
+        self.create_form.on_save.connect(self.refresh)
         self.create_form.show()
 
     def show_edit_form(self, me_id: int):
         self.edit_form = MaterialEvidenceEditForm(me_id)
-        self.edit_form.on_save.connect(self.refresh_table)
+        self.edit_form.on_save.connect(self.refresh)
         self.edit_form.show()
 
     def get_export_data(self):
@@ -254,7 +256,7 @@ class MaterialEvidenceListView(QWidget):
         if event.type() == QEvent.Type.KeyPress:
             if event.key() == Qt.Key.Key_Return:
                 self.reset_params(ignore_barcode=True)
-                count = self.refresh_table()
+                count = self.refresh()
 
                 self.barcode = ""
                 self.qr_dialog.close()
