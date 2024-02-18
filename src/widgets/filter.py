@@ -8,7 +8,10 @@ from src.db import session
 class FilterWidget(QWidget):
     def __init__(self, label: str, model, schema, on_change):
         super().__init__()
-        self.options = self.fetch_options(model, schema)
+        self.model = model
+        self.schema = schema
+        
+        self.options = self.fetch_options()
         self.on_change = on_change
 
         option_items = [str(option) for option in self.options]
@@ -32,12 +35,18 @@ class FilterWidget(QWidget):
 
         self.select.currentIndexChanged.connect(self.handle_change)
 
+    def refresh(self):
+        self.options = self.fetch_options()
+        option_items = [str(option) for option in self.options]
+        self.select.clear()
+        self.select.addItems(option_items)
+    
     def handle_change(self, index):
         if index == -1:
             return None
         self.on_change(self.options[index].id)
 
-    def fetch_options(self, model, schema):
-        query = sa.select(model)
+    def fetch_options(self):
+        query = sa.select(self.model).where(self.model.active.is_(True))
         results = session.scalars(query)
-        return [schema.from_obj(obj) for obj in results]
+        return [self.schema.from_obj(obj) for obj in results.all()]

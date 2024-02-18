@@ -182,6 +182,8 @@ class CaseListView(QWidget):
         self.from_date = TODAY.addMonths(-1)
         self.to_date = TODAY
 
+        self.investigator_filter.refresh()
+
         self.investigator_filter.select.setCurrentIndex(-1)
         self.from_date_filter.datepicker.setDateTime(self.from_date)
         self.to_date_filter.datepicker.setDateTime(self.to_date)
