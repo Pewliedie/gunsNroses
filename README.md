@@ -1,7 +1,7 @@
 # Proof Vault
 
 Требования:
-- Python 3.11
+- Python 3.11 (3.10 и 3.12 не подойдут)
 
 Основной стек:
 - PyQt6 - GUI
@@ -10,12 +10,15 @@
 - pydantic - Валидация
 
 Пакеты и зависимости:
-- PyAutoGUI
 - qrcode
+- reportlab
+- pywin32
 - Pillow
-- python-ecspos
 - black
-- pylint
+- dlib
+- numpy
+- opencv-python
+- face_recognition
 
 ## Установка и запуск
 ```
@@ -36,7 +39,7 @@ python main.py
 ```
 python build.py
 ```
-## Форматирование кода и линтер
+## Форматирование кода
 ```
-python format_and_lint.py
+python format.py
 ```
