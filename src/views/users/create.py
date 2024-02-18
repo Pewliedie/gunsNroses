@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
 )
 
 import src.models as m
-from src.biometrics.recognition import Recognizer
+from src.biometrics.recognition import recognizer
 from src.config import DIALOG_MIN_WIDTH, RANK_LIST
 from src.db import session
 
@@ -21,13 +21,15 @@ class UserCreateForm(QWidget):
 
     def __init__(self):
         super().__init__()
+
+        self.encoded_image_data = ""
+
         self.setWindowTitle('Добавить пользователя')
         self.setMinimumWidth(DIALOG_MIN_WIDTH)
+
         self.init_ui()
 
     def init_ui(self):
-
-        self.encoding_image_data = 'empty_data'
         first_name_label = QLabel("Имя")
         self.first_name_input = QLineEdit()
 
@@ -73,6 +75,18 @@ class UserCreateForm(QWidget):
         open_image_button.clicked.connect(self.open_image)
         save_button.clicked.connect(self.save)
 
+    def open_image(self):
+        dialog = QFileDialog()
+
+        dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
+        dialog.setNameFilter("*.jpg")
+
+        dialogSuccess = dialog.exec()
+
+        if dialogSuccess:
+            image_path = dialog.selectedFiles()[0]
+            self.encoded_image_data = recognizer.encode_image(image_path)
+
     def validate(self):
         error_messages = []
 
@@ -110,22 +124,14 @@ class UserCreateForm(QWidget):
 
         user.set_password(self.password_input.text())
 
-        face_id = m.FaceID(user=user, data=self.encoding_image_data)
-
         session.add(user)
-        session.add(face_id)
+        session.flush()
+
+        if self.encoded_image_data:
+            face_id = m.FaceID(user_id=user.id, data=self.encoded_image_data)
+            session.add(face_id)
+
         session.commit()
 
         self.on_save.emit()
         self.close()
-
-    def open_image(self):
-        dialog = QFileDialog()
-        dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        dialog.setNameFilter("*.jpg")
-        dialogSuccess = dialog.exec()
-
-        recognizer = Recognizer()
-        if dialogSuccess:
-            image_path = dialog.selectedFiles()[0]
-            self.encoding_image_data = recognizer.encode_image(image_path)

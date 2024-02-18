@@ -24,11 +24,6 @@ TARGET_PRINTER_NAME = "Xprinter XP-365B"
 IMAGE_PRINT_WIDTH = 600
 IMAGE_PRINT_HEIGHT = 600
 
-STATUS_LIST = [
-    "На хранении",
-    "На экспертизе",
-    "Уничтожено",
-]
 
 RANK_LIST = [
     # "Рядовой",

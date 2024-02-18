@@ -21,8 +21,11 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(
                 self,
                 "Ошибка",
-                "Возникла ошибка в ходе работы приложения. Подробнее: " + str(e),
+                f"Возникла ошибка в ходе работы приложения"
+                f"Обратитесь в тех.поддержку"
+                f"Подробнее: {e}",
             )
+            self.close()
 
     def init_ui(self):
         self.setWindowTitle(config.APP_NAME)

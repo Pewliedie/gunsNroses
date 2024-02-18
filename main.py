@@ -15,8 +15,8 @@ def main():
     app_icon = QIcon(ICON_PATH)
     app.setWindowIcon(app_icon)
 
-    window = AuthenticationView()
-    window.show()
+    main_view = AuthenticationView()
+    main_view.show()
 
     sys.exit(app.exec())
 

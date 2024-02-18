@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 import sqlalchemy as sa
-from PyQt6.QtCore import QDateTime
+from PyQt6.QtCore import QDateTime, Qt, QEvent
 from PyQt6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QTableView,
     QVBoxLayout,
     QWidget,
+    QMessageBox,
 )
 
 import src.models as m
@@ -19,7 +20,7 @@ from src.config import DESKTOP_PATH, TODAY
 from src.db import session
 from src.report import export_to_pdf, export_to_xlsx
 from src.views.table_model import TableModel
-from src.widgets import DatePickerWidget, FilterWidget
+from src.widgets import DatePickerWidget, FilterWidget, QRDialog
 
 from .create import MaterialEvidenceCreateForm
 from .edit import MaterialEvidenceEditForm
@@ -35,13 +36,13 @@ export_headers = [
 ]
 
 
-# TODO: пагинация
 class MaterialEvidenceListView(QWidget):
 
     def __init__(self):
         super().__init__()
 
         self.case_id = None
+        self.barcode = ""
 
         self.from_date = TODAY.addMonths(-1)
         self.to_date = TODAY
@@ -64,13 +65,17 @@ class MaterialEvidenceListView(QWidget):
         search_button = QPushButton("Поиск")
         reset_button = QPushButton("Сбросить")
         add_button = QPushButton("Добавить")
+        search_by_qr_button = QPushButton("Найти по QR")
         export_xlsx_button = QPushButton("Экспорт в Excel")
         export_pdf_button = QPushButton("Экспорт в PDF")
+
+        self.qr_dialog = QRDialog(self.handle_scan)
 
         controls_layout.addWidget(self.search_input)
         controls_layout.addWidget(search_button)
         controls_layout.addWidget(reset_button)
         controls_layout.addWidget(add_button)
+        controls_layout.addWidget(search_by_qr_button)
         controls_layout.addWidget(export_xlsx_button)
         controls_layout.addWidget(export_pdf_button)
 
@@ -110,12 +115,18 @@ class MaterialEvidenceListView(QWidget):
         search_button.clicked.connect(self.refresh_table)
         reset_button.clicked.connect(self.reset)
         add_button.clicked.connect(self.show_create_form)
+        search_by_qr_button.clicked.connect(self.search_by_qr)
         export_xlsx_button.clicked.connect(self.export_xlsx)
         export_pdf_button.clicked.connect(self.export_pdf)
 
     def fetch_data(self):
-        keyword = self.search_input.text().lower()
+        keyword = self.search_input.text()
         query = sa.select(m.MaterialEvidence)
+
+        if self.barcode:
+            query = query.filter(
+                m.MaterialEvidence.barcode == self.barcode,
+            )
 
         if keyword:
             query = query.filter(
@@ -142,6 +153,7 @@ class MaterialEvidenceListView(QWidget):
 
     def refresh_table(self):
         raw_data = self.fetch_data()
+
         data = [
             list(s.MaterialEvidenceListItem.from_obj(obj)) for obj in raw_data.all()
         ]
@@ -149,6 +161,7 @@ class MaterialEvidenceListView(QWidget):
             data=data,
             headers=self.headers,
         )
+
         self.table_view.setModel(table_model)
 
         for i in range(len(data)):
@@ -157,10 +170,15 @@ class MaterialEvidenceListView(QWidget):
             button.clicked.connect(lambda: self.show_edit_form(me_id))
             self.table_view.setIndexWidget(table_model.index(i, 0), button)
 
-    def reset(self):
+        return len(data)
+
+    def reset_params(self, ignore_barcode=False):
         self.search_input.clear()
 
         self.case_id = None
+
+        if not ignore_barcode:
+            self.barcode = ""
 
         self.from_date = TODAY.addMonths(-1)
         self.to_date = TODAY
@@ -170,6 +188,8 @@ class MaterialEvidenceListView(QWidget):
         self.from_date_filter.datepicker.setDateTime(self.from_date)
         self.to_date_filter.datepicker.setDateTime(self.to_date)
 
+    def reset(self):
+        self.reset_params()
         self.refresh_table()
 
     def set_case(self, case_id: int):
@@ -229,3 +249,22 @@ class MaterialEvidenceListView(QWidget):
 
         rows = self.get_export_data()
         export_to_pdf(headers=export_headers, rows=rows, file_path=file_path)
+
+    def handle_scan(self, event):
+        if event.type() == QEvent.Type.KeyPress:
+            if event.key() == Qt.Key.Key_Return:
+                self.reset_params(ignore_barcode=True)
+                count = self.refresh_table()
+
+                self.barcode = ""
+                self.qr_dialog.close()
+
+                QMessageBox.information(
+                    self, "Поиск по QR", f"Найдено {count} запись(-и/-ей)"
+                )
+                return
+            elif event.text():
+                self.barcode += event.text()
+
+    def search_by_qr(self):
+        self.qr_dialog.exec()

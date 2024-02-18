@@ -1,9 +1,10 @@
 from datetime import datetime
+from enum import Enum
 from typing import List
 
 import sqlalchemy as sa
 from passlib.hash import pbkdf2_sha256
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Enum as SAEnum, Column
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import expression, func
 
@@ -21,7 +22,6 @@ class User(Base):
     rank: Mapped[str]
     is_superuser: Mapped[bool] = mapped_column(server_default=expression.false())
     active: Mapped[bool] = mapped_column(default=True)
-
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
@@ -44,39 +44,42 @@ class FaceID(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user: Mapped["User"] = relationship(back_populates="face")
     data: Mapped[str]
-
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
-
-    user: Mapped["User"] = relationship(back_populates="face")
 
 
 class Case(Base):
     __tablename__ = "cases"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    investigator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    investigator: Mapped[User] = relationship(User, lazy="selectin")
     name: Mapped[str]
     description: Mapped[str]
+    investigator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    investigator: Mapped[User] = relationship(User, lazy="selectin")
     active: Mapped[bool] = mapped_column(default=True)
-
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
-
     material_evidences: Mapped[List["MaterialEvidence"]] = relationship(
         back_populates="case"
     )
     active: Mapped[bool] = mapped_column(server_default=expression.true())
 
 
+class MaterialEvidenceStatus(Enum):
+    IN_STORAGE = "На хранении"
+    DESTROYED = "Уничтожен"
+    TAKEN = "Взят"
+    ON_EXAMINATION = "На экспертизе"
+
+
 class MaterialEvidence(Base):
-    __tablename__ = "material_evidence"
+    __tablename__ = "material_evidences"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
@@ -85,7 +88,11 @@ class MaterialEvidence(Base):
         Case, back_populates="material_evidences", lazy="selectin"
     )
     description: Mapped[str]
-    status: Mapped[str]
+    status = Column(
+        SAEnum(MaterialEvidenceStatus),
+        default=MaterialEvidenceStatus.IN_STORAGE,
+        nullable=False,
+    )
     barcode: Mapped[int]
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
@@ -100,14 +107,12 @@ class MaterialEvidenceEvent(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped[User] = relationship(User)
-    material_evidence_id: Mapped[int] = mapped_column(ForeignKey("material_evidence.id"))
-    material_evidence: Mapped[MaterialEvidence] = relationship(MaterialEvidence)
-    event_type: Mapped[str]
-    created: Mapped[datetime] = mapped_column(server_default=func.now())
-    updated: Mapped[datetime] = mapped_column(
-        server_default=func.now(), onupdate=func.now()
+    material_evidence_id: Mapped[int] = mapped_column(
+        ForeignKey("material_evidences.id")
     )
-    active: Mapped[bool] = mapped_column(server_default=expression.true())
+    material_evidence: Mapped[MaterialEvidence] = relationship(MaterialEvidence)
+    action: Mapped[str]
+    created: Mapped[datetime] = mapped_column(server_default=func.now())
 
 
 class Session(Base):

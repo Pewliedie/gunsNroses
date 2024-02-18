@@ -55,6 +55,7 @@ class CaseCreateForm(QWidget):
         user_items = [str(user) for user in self.users]
         self.user_select.addItems([str(user) for user in self.users])
         self.user_select.setEditable(True)
+
         completer = QCompleter(user_items)
         completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.user_select.setCompleter(completer)
@@ -88,7 +89,7 @@ class CaseCreateForm(QWidget):
         query = sa.select(m.MaterialEvidence).where(
             sa.and_(
                 m.MaterialEvidence.case_id.is_(None),
-                m.MaterialEvidence.status.notilike("Уничтожено"),
+                m.MaterialEvidence.status == m.MaterialEvidenceStatus.IN_STORAGE,
             )
         )
         results = session.scalars(query).all()

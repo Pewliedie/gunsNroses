@@ -1,7 +1,6 @@
 import sqlalchemy as sa
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
-    QComboBox,
     QLabel,
     QLineEdit,
     QMessageBox,
@@ -12,8 +11,7 @@ from PyQt6.QtWidgets import (
 )
 
 import src.models as m
-from src.config import STATUS_LIST
-from src.config import DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH, STATUS_LIST
+from src.config import DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH
 from src.db import session
 
 
@@ -42,19 +40,13 @@ class MaterialEvidenceEditForm(QWidget):
         description_label = QLabel("Описание")
         self.description_textarea = QTextEdit(self.material_evidence.description)
 
-        status_select_label = QLabel("Статус")
-        self.status_select = QComboBox()
-        self.status_select.addItems(STATUS_LIST)
-
-        for i in range(self.status_select.count()):
-            if self.status_select.itemText(i) == self.material_evidence.status:
-                self.status_select.setCurrentIndex(i)
-                break
+        status_label = QLabel(f"Статус: {self.material_evidence.status}")
 
         save_button = QPushButton("Сохранить")
         delete_button = QPushButton("Удалить")
-        return_button = QPushButton("Вернуть")
+
         take_button = QPushButton("Забрать")
+        return_button = QPushButton("Вернуть")
         destroy_button = QPushButton("Уничтожить")
 
         layout = QVBoxLayout()
@@ -65,8 +57,7 @@ class MaterialEvidenceEditForm(QWidget):
         layout.addWidget(description_label)
         layout.addWidget(self.description_textarea)
 
-        layout.addWidget(status_select_label)
-        layout.addWidget(self.status_select)
+        layout.addWidget(status_label)
 
         layout.addWidget(save_button)
         layout.addWidget(delete_button)
@@ -81,7 +72,7 @@ class MaterialEvidenceEditForm(QWidget):
         return_button.clicked.connect(self.return_event)
         take_button.clicked.connect(self.take_event)
         destroy_button.clicked.connect(self.destroy_event)
-        
+
     def get_data(self, entity_id: int) -> m.MaterialEvidence | None:
         query = sa.select(m.MaterialEvidence).where(m.MaterialEvidence.id == entity_id)
         result: m.MaterialEvidence | None = session.scalar(query)
@@ -94,7 +85,7 @@ class MaterialEvidenceEditForm(QWidget):
             error_messages.append("Наименование не может быть пустым")
 
         if not self.description_textarea.toPlainText():
-            error_messages.append("Постановление не может быть пустым")
+            error_messages.append("Описание не может быть пустым")
 
         if error_messages:
             messagebox = QMessageBox()
@@ -138,28 +129,33 @@ class MaterialEvidenceEditForm(QWidget):
         self.close()
 
     def return_event(self):
-        self.create_event(STATUS_LIST[0])
+        self.create_event(m.MaterialEvidenceStatus.IN_STORAGE.value)
 
     def take_event(self):
-        self.create_event(STATUS_LIST[1])
+        self.create_event(m.MaterialEvidenceStatus.TAKEN.value)
 
     def destroy_event(self):
-        self.create_event(STATUS_LIST[2])
-        self.delete()
-    
-    def create_event(self, event_type: str):
-        
-        self.material_evidence.status = event_type
+        self.create_event(m.MaterialEvidenceStatus.DESTROYED.value)
 
-        if session.is_modified(self.material_evidence):
-            session.commit()
+    def create_event(self, status: str):
+        self.material_evidence.status = status
 
-        query = sa.select(m.Session).where(m.Session.active.is_(True))
-        session_data = session.scalars(query).first()
-        event = m.MaterialEvidenceEvent(
-            user=session_data.user, material_evidence=self.material_evidence, event_type=event_type
+        query = (
+            sa.select(m.Session)
+            .filter(m.Session.active.is_(True))
+            .order_by(m.Session.login.desc())
         )
+
+        current_session = session.scalars(query).first()
+
+        event = m.MaterialEvidenceEvent(
+            user_id=current_session.user_id,
+            material_evidence_id=self.material_evidence.id,
+            action=status,
+        )
+
         session.add(event)
         session.commit()
+
         self.on_save.emit()
         self.close()

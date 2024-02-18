@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
 )
 
 import src.models as m
-from src.biometrics.recognition import Recognizer
+from src.biometrics.recognition import recognizer
 from src.config import DIALOG_MIN_WIDTH, RANK_LIST
 from src.db import session
 
@@ -30,14 +30,14 @@ class UserEditForm(QWidget):
 
     def init_ui(self, user_id: int):
         self.user = self.get_data(user_id)
-        self.face = self.get_face_date(user_id)
 
         if not self.user:
             QMessageBox.critical(self, "Ошибка", "Пользователь не найден")
             self.close()
             return
 
-        self.encoding_image_data = self.face.data
+        self.encoded_image_data = self.user.face.data if self.user.face else ""
+
         first_name_label = QLabel("Имя")
         self.first_name_input = QLineEdit(self.user.first_name)
 
@@ -95,10 +95,17 @@ class UserEditForm(QWidget):
         result: m.User | None = session.scalar(query)
         return result
 
-    def get_face_date(self, entity_id: int) -> m.FaceID | None:
-        query = sa.select(m.FaceID).where(m.FaceID.user_id == entity_id)
-        result: m.FaceID | None = session.scalar(query)
-        return result
+    def open_image(self):
+        dialog = QFileDialog()
+
+        dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
+        dialog.setNameFilter("*.jpg")
+
+        dialogSuccess = dialog.exec()
+
+        if dialogSuccess:
+            image_path = dialog.selectedFiles()[0]
+            self.encoded_image_data = recognizer.encode_image(image_path)
 
     def validate(self):
         error_messages = []
@@ -135,24 +142,19 @@ class UserEditForm(QWidget):
 
         self.user.set_password(self.password_input.text())
 
-        self.face.data = self.encoding_image_data
+        if self.encoded_image_data:
+            self.user.face.data = self.encoded_image_data
+        else:
+            face = m.FaceID(user_id=self.user.id, data=self.encoded_image_data)
+            session.add(face)
+            session.flush()
+            self.user.face_id = face.id
 
-        if session.is_modified(self.user) or session.is_modified(self.face):
+        if session.is_modified(self.user):
             session.commit()
             self.on_save.emit()
 
         self.close()
-
-    def open_image(self):
-        dialog = QFileDialog()
-        dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        dialog.setNameFilter("*.jpg")
-        dialogSuccess = dialog.exec()
-
-        recognizer = Recognizer()
-        if dialogSuccess:
-            image_path = dialog.selectedFiles()[0]
-            self.encoding_image_data = recognizer.encode_image(image_path)
 
     def delete(self):
         messagebox = QMessageBox()

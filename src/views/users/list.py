@@ -37,7 +37,6 @@ export_headers = [
 ]
 
 
-# TODO: пагинация
 class UserListView(QWidget):
 
     def __init__(self):

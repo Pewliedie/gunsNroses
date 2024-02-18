@@ -1,3 +1,4 @@
+from PyQt6.QtGui import QKeyEvent
 import sqlalchemy as sa
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
@@ -24,13 +25,12 @@ from .users.create import UserCreateForm
 
 
 class AuthenticationView(QWidget):
-
     def __init__(self):
         super().__init__()
 
         self.session_timer = QTimer()
         self.session_timer.timeout.connect(self.session_expired)
-        self.session_timer.start(300000)  # 10 minutes session expiration time
+        self.session_timer.start(5 * 60 * 1000)
 
         self.setWindowTitle("Авторизация")
         self.setFixedSize(300, 200)
@@ -47,6 +47,8 @@ class AuthenticationView(QWidget):
         self.login_button = QPushButton("Войти")
         self.face_id_button = QPushButton("Face ID")
         self.sign_up_button = QPushButton("Создать пользователя")
+
+        self.sign_up_button.hide()
 
         self.fetch_users()
 
@@ -80,16 +82,24 @@ class AuthenticationView(QWidget):
         completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.user_select.setCompleter(completer)
 
-        self.sign_up_button.setEnabled(False)
-
         if not self.users:
             QMessageBox.warning(
                 self, "Ошибка", "Нет доступных пользователей. Создайте пользователя."
             )
-            self.sign_up_button.setEnabled(True)
+            self.sign_up_button.show()
+
+    def manage_session(self, user: User):
+        sessions = session.query(Session).filter(Session.active.is_(True)).all()
+
+        for s in sessions:
+            s.active = False
+
+        new_session = Session(user=user)
+
+        session.add(new_session)
+        session.commit()
 
     def authenticated_by_password(self):
-
         user_id = self.users[self.user_select.currentIndex()].id
         user = session.scalar(sa.select(User).where(User.id == user_id))
 
@@ -102,6 +112,7 @@ class AuthenticationView(QWidget):
         password = self.password_input.text()
 
         if user.check_password(password):
+            self.manage_session(user)
             self.open_main_window()
         else:
             QMessageBox.warning(
@@ -109,6 +120,8 @@ class AuthenticationView(QWidget):
             )
 
     def authenticated_by_face_id(self):
+        authenticated = False
+
         try:
             user_id = self.users[self.user_select.currentIndex()].id
             user = session.query(User).filter(User.id == user_id).first()
@@ -117,26 +130,20 @@ class AuthenticationView(QWidget):
             QMessageBox.warning(
                 self, "Ошибка авторизации", "Ошибка при аутентификации по FACE ID"
             )
-            authenticated = False
 
         if authenticated:
-            # Deactivate all active sessions
-            _sessions = session.query(Session).filter(Session.active.is_(True)).all()
-            for active_session in _sessions:
-                active_session.active = False
-                if session.is_modified(active_session):
-                    session.commit()
-
-            # Create new active session
-            new_active_session = Session(user=user)
-            session.add(new_active_session)
-            session.commit()
+            self.manage_session(user)
             self.open_main_window()
-
         else:
             QMessageBox.warning(
                 self, "Ошибка авторизации", "Ошибка при аутентификации по FACE ID"
             )
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Return:
+            self.authenticated_by_password()
+
+        return super().keyPressEvent(event)
 
     def session_expired(self):
         QMessageBox.warning(
@@ -144,7 +151,7 @@ class AuthenticationView(QWidget):
             "Завершение сессии",
             "Время сессии истекло. Пожалуйста, авторизуйтесь снова",
         )
-        self.close()
+        self.parent().close()
 
     def open_main_window(self):
         self.main_window = MainWindow()

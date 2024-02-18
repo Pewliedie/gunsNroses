@@ -5,6 +5,9 @@ import face_recognition
 import numpy as np
 
 
+__all__ = ('recognizer', 'biometric_auth')
+
+
 class Recognizer:
     def __init__(self):
         self.known_face_encodings = []
@@ -13,7 +16,6 @@ class Recognizer:
         self.frame_resizing = 0.25
 
     def encode_image(self, image_path):
-
         img = cv2.imread(image_path)
         rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img_encoding = face_recognition.face_encodings(rgb_img)[0]
@@ -33,7 +35,6 @@ class Recognizer:
 
         face_names = []
         for face_encoding in face_encodings:
-            # See if the face is a match for the known face(s)
             matches = face_recognition.compare_faces(
                 self.known_face_encodings, face_encoding
             )
@@ -53,20 +54,19 @@ class Recognizer:
 
 
 def biometric_auth(face_encodings, id):
+    recognizer = Recognizer()
 
-    reco = Recognizer()
     image_encoding = np.array(json.loads(face_encodings))
 
-    reco.known_face_encodings.append(image_encoding)
-    reco.known_face_names.append(id)
+    recognizer.known_face_encodings.append(image_encoding)
+    recognizer.known_face_names.append(id)
 
     cap = cv2.VideoCapture(0)
 
     while True:
         _, frame = cap.read()
 
-        # Detect Faces
-        face_locations, face_names = reco.detect_known_faces(frame)
+        face_locations, face_names = recognizer.detect_known_faces(frame)
         for face_loc, name in zip(face_locations, face_names):
 
             y1, x2, y2, x1 = face_loc[0], face_loc[1], face_loc[2], face_loc[3]
@@ -76,10 +76,7 @@ def biometric_auth(face_encodings, id):
             )
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 200), 4)
 
-            if name == id:
-                return True
-            else:
-                return False
+            return name == id
 
         key = cv2.waitKey(1)
         if key == 27:
@@ -87,3 +84,6 @@ def biometric_auth(face_encodings, id):
 
     cap.release()
     cv2.destroyAllWindows()
+
+
+recognizer = Recognizer()

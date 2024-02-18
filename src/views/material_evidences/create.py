@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 )
 
 import src.models as m
-from src.config import DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH, STATUS_LIST
+from src.config import DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH
 from src.db import session
 from src.utils import printer_processor
 
@@ -23,8 +23,10 @@ class MaterialEvidenceCreateForm(QWidget):
 
     def __init__(self):
         super().__init__()
+
         self.setWindowTitle("Добавить вещ.док")
         self.setMinimumSize(DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT)
+
         self.init_ui()
 
     def init_ui(self):
@@ -33,10 +35,6 @@ class MaterialEvidenceCreateForm(QWidget):
 
         description_label = QLabel("Описание")
         self.description_textarea = QTextEdit()
-
-        status_select_label = QLabel("Статус")
-        self.status_select = QComboBox()
-        self.status_select.addItems(STATUS_LIST)
 
         save_button = QPushButton("Сохранить")
 
@@ -47,9 +45,6 @@ class MaterialEvidenceCreateForm(QWidget):
 
         layout.addWidget(description_label)
         layout.addWidget(self.description_textarea)
-
-        layout.addWidget(status_select_label)
-        layout.addWidget(self.status_select)
 
         layout.addWidget(save_button)
 
@@ -64,7 +59,7 @@ class MaterialEvidenceCreateForm(QWidget):
             error_messages.append("Наименование не может быть пустым")
 
         if not self.description_textarea.toPlainText():
-            error_messages.append("Постановление не может быть пустым")
+            error_messages.append("Описание не может быть пустым")
 
         if error_messages:
             messagebox = QMessageBox()
@@ -86,12 +81,13 @@ class MaterialEvidenceCreateForm(QWidget):
             return
 
         uuid_value = str(uuid.uuid4())
+
         material_evidence = m.MaterialEvidence(
             name=self.name_input.text(),
             description=self.description_textarea.toPlainText(),
-            status=self.status_select.currentText(),
             barcode=uuid_value,
         )
+
         session.add(material_evidence)
         session.commit()
 
