@@ -44,9 +44,16 @@ class MaterialEvidenceEditForm(QWidget):
         self.description_textarea = QTextEdit(self.material_evidence.description)
 
         status_label = QLabel(f"Статус: {self.material_evidence.status.value}")
+        last_event = self.material_evidence.last_event
+        last_event_info = (
+            f'{last_event.action.value} - {last_event.user} - {last_event.created.strftime("%d %b %Y %H:%M:%S")}'
+            if last_event
+            else "Нет событий"
+        )
+        last_event_label = QLabel(f"Последнее событие: {last_event_info}")
 
         save_button = QPushButton("Сохранить")
-        delete_button = QPushButton("Удалить")
+        archive_button = QPushButton("Архивировать")
 
         take_button = QPushButton("Забрать")
         return_button = QPushButton("Вернуть")
@@ -61,9 +68,10 @@ class MaterialEvidenceEditForm(QWidget):
         layout.addWidget(self.description_textarea)
 
         layout.addWidget(status_label)
+        layout.addWidget(last_event_label)
 
         layout.addWidget(save_button)
-        layout.addWidget(delete_button)
+        layout.addWidget(archive_button)
         layout.addWidget(return_button)
         layout.addWidget(take_button)
         layout.addWidget(destroy_button)
@@ -71,7 +79,7 @@ class MaterialEvidenceEditForm(QWidget):
         self.setLayout(layout)
 
         save_button.clicked.connect(self.save)
-        delete_button.clicked.connect(self.delete)
+        archive_button.clicked.connect(self.archive)
         return_button.clicked.connect(self.return_event)
         take_button.clicked.connect(self.take_event)
         destroy_button.clicked.connect(self.destroy_event)
@@ -117,23 +125,25 @@ class MaterialEvidenceEditForm(QWidget):
 
         self.close()
 
-    def delete(self):
+    def archive(self):
         messagebox = QMessageBox()
-        messagebox.setWindowTitle("Подтверждение удаления")
-        messagebox.setText("Вы уверены, что хотите удалить вещ.док?")
+        messagebox.setWindowTitle("Подтверждение архивации")
+        messagebox.setText("Вы уверены, что хотите архивировать вещ.док?")
 
-        messagebox.addButton("Да", QMessageBox.ButtonRole.YesRole)
-        messagebox.addButton("Нет", QMessageBox.ButtonRole.NoRole)
+        messagebox.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        messagebox.setDefaultButton(QMessageBox.StandardButton.No)
+
+        messagebox.button(QMessageBox.StandardButton.Yes).setText("Да")
+        messagebox.button(QMessageBox.StandardButton.No).setText("Нет")
 
         response = messagebox.exec()
 
-        if response == QMessageBox.ButtonRole.NoRole:
+        if response == QMessageBox.StandardButton.No:
             return
 
-        self.material_evidence.active = False
-        session.commit()
-        self.on_save.emit()
-        self.close()
+        self.create_event(m.MaterialEvidenceStatus.ARCHIVED.name)
 
     def return_event(self):
         self.create_event(m.MaterialEvidenceStatus.IN_STORAGE.name)

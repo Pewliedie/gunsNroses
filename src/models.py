@@ -2,15 +2,14 @@ from datetime import datetime
 from enum import Enum
 from typing import List
 
-import sqlalchemy as sa
 from passlib.hash import pbkdf2_sha256
 from sqlalchemy import Column
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, desc, select
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql import expression, func
+from sqlalchemy.sql import expression
 
-from src.db import Base
+from src.db import Base, session
 
 
 class User(Base):
@@ -23,10 +22,10 @@ class User(Base):
     phone_number: Mapped[str]
     rank: Mapped[str]
     is_superuser: Mapped[bool] = mapped_column(server_default=expression.false())
-    active: Mapped[bool] = mapped_column(default=True)
-    created: Mapped[datetime] = mapped_column(server_default=func.now())
+    active: Mapped[bool] = mapped_column(server_default=expression.true())
+    created: Mapped[datetime] = mapped_column(default=datetime.now())
     updated: Mapped[datetime] = mapped_column(
-        server_default=func.now(), onupdate=func.now()
+        default=datetime.now(), onupdate=datetime.now()
     )
     cases: Mapped[List["Case"]] = relationship(
         "Case", back_populates="investigator", lazy="selectin"
@@ -40,6 +39,9 @@ class User(Base):
     def check_password(self, password):
         return pbkdf2_sha256.verify(password, self.password_hash)
 
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - ({self.rank})"
+
 
 class FaceID(Base):
     __tablename__ = "face_ids"
@@ -48,9 +50,9 @@ class FaceID(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="face")
     data: Mapped[str]
-    created: Mapped[datetime] = mapped_column(server_default=func.now())
+    created: Mapped[datetime] = mapped_column(default=datetime.now())
     updated: Mapped[datetime] = mapped_column(
-        server_default=func.now(), onupdate=func.now()
+        default=datetime.now(), onupdate=datetime.now()
     )
 
 
@@ -63,9 +65,9 @@ class Case(Base):
     investigator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     investigator: Mapped[User] = relationship(User, lazy="selectin")
     active: Mapped[bool] = mapped_column(default=True)
-    created: Mapped[datetime] = mapped_column(server_default=func.now())
+    created: Mapped[datetime] = mapped_column(default=datetime.now())
     updated: Mapped[datetime] = mapped_column(
-        server_default=func.now(), onupdate=func.now()
+        default=datetime.now(), onupdate=datetime.now()
     )
     material_evidences: Mapped[List["MaterialEvidence"]] = relationship(
         back_populates="case"
@@ -78,6 +80,7 @@ class MaterialEvidenceStatus(Enum):
     DESTROYED = "Уничтожен"
     TAKEN = "Взят"
     ON_EXAMINATION = "На экспертизе"
+    ARCHIVED = "В архиве"
 
 
 class MaterialEvidence(Base):
@@ -96,11 +99,21 @@ class MaterialEvidence(Base):
         nullable=False,
     )
     barcode: Mapped[str]
-    created: Mapped[datetime] = mapped_column(server_default=func.now())
+    created: Mapped[datetime] = mapped_column(default=datetime.now())
     updated: Mapped[datetime] = mapped_column(
-        server_default=func.now(), onupdate=func.now()
+        default=datetime.now(), onupdate=datetime.now()
     )
     active: Mapped[bool] = mapped_column(server_default=expression.true())
+
+    @property
+    def last_event(self):
+        query = (
+            select(MaterialEvidenceEvent)
+            .filter(MaterialEvidenceEvent.material_evidence_id == self.id)
+            .order_by(MaterialEvidenceEvent.created.desc())
+        )
+        last_event = session.scalars(query).first()
+        return last_event
 
 
 class MaterialEvidenceEvent(Base):
@@ -114,7 +127,7 @@ class MaterialEvidenceEvent(Base):
     )
     material_evidence: Mapped[MaterialEvidence] = relationship(MaterialEvidence)
     action = Column(SAEnum(MaterialEvidenceStatus), nullable=False)
-    created: Mapped[datetime] = mapped_column(server_default=func.now())
+    created: Mapped[datetime] = mapped_column(default=datetime.now())
 
 
 class Session(Base):
@@ -123,8 +136,8 @@ class Session(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped[User] = relationship(User)
-    login: Mapped[datetime] = mapped_column(server_default=func.now())
-    logout: Mapped[datetime | None] = mapped_column(onupdate=func.now())
+    login: Mapped[datetime] = mapped_column(default=datetime.now())
+    logout: Mapped[datetime | None] = mapped_column(onupdate=datetime.now())
     active: Mapped[bool] = mapped_column(server_default=expression.true())
 
 
@@ -138,6 +151,6 @@ class AuditEntry(Base):
     action: Mapped[str]
     fields: Mapped[str]
     data: Mapped[str]
-    created: Mapped[datetime] = mapped_column(server_default=sa.func.now())
+    created: Mapped[datetime] = mapped_column(default=datetime.now())
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
     user: Mapped[User | None] = relationship(User)
