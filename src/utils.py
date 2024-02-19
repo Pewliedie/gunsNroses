@@ -1,13 +1,16 @@
+import sys
 from typing import Callable
 
 import qrcode
 import win32print
 import win32ui
 from PIL import ImageWin
+from PyQt6.QtWidgets import QMessageBox
 
 from src.config import IMAGE_PRINT_HEIGHT, IMAGE_PRINT_WIDTH, TARGET_PRINTER_NAME
+from src.log import logger
 
-__all__ = ("printer_processor",)
+__all__ = ("printer_processor", "exception_handler")
 
 
 class PrinterProcessor:
@@ -62,3 +65,21 @@ class PrinterProcessor:
 
 
 printer_processor = PrinterProcessor(TARGET_PRINTER_NAME)
+
+
+def exception_handler(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            logger.error(f"An error occurred: {e}", exc_info=True)
+            QMessageBox.critical(
+                None,
+                "Ошибка",
+                "Возникла ошибка в ходе работы приложения. "
+                f"Обратитесь в тех.поддержку. "
+                f"Подробнее: {e}",
+            )
+            sys.exit(-1)
+
+    return wrapper

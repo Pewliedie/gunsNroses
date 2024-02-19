@@ -92,7 +92,7 @@ class MaterialEvidence(Base):
     description: Mapped[str]
     status = Column(
         SAEnum(MaterialEvidenceStatus),
-        default=MaterialEvidenceStatus.IN_STORAGE.value,
+        default=MaterialEvidenceStatus.IN_STORAGE,
         nullable=False,
     )
     barcode: Mapped[int]
@@ -113,7 +113,7 @@ class MaterialEvidenceEvent(Base):
         ForeignKey("material_evidences.id")
     )
     material_evidence: Mapped[MaterialEvidence] = relationship(MaterialEvidence)
-    action: Mapped[str]
+    action = Column(SAEnum(MaterialEvidenceStatus), nullable=False)
     created: Mapped[datetime] = mapped_column(server_default=func.now())
 
 
@@ -139,5 +139,5 @@ class AuditEntry(Base):
     fields: Mapped[str]
     data: Mapped[str]
     created: Mapped[datetime] = mapped_column(server_default=sa.func.now())
-    # user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    # user: Mapped[User] = relationship(User)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
+    user: Mapped[User | None] = relationship(User)

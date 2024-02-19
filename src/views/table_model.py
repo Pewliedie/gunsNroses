@@ -5,8 +5,9 @@ from PyQt6.QtCore import Qt
 
 
 class TableModel(QtCore.QAbstractTableModel):
-    def __init__(self, data, headers):
+    def __init__(self, data, headers, hide_first_column=True):
         super(TableModel, self).__init__()
+        self.hide_first_column = hide_first_column
         self._data = data
         self._headers = headers
 
@@ -15,7 +16,7 @@ class TableModel(QtCore.QAbstractTableModel):
             row = index.row()
             col = index.column()
 
-            if col == 0:
+            if col == 0 and self.hide_first_column:
                 return None
 
             value = self._data[row][col][1]

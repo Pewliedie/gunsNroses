@@ -43,7 +43,7 @@ class MaterialEvidenceEditForm(QWidget):
         description_label = QLabel("Описание")
         self.description_textarea = QTextEdit(self.material_evidence.description)
 
-        status_label = QLabel(f"Статус: {self.material_evidence.status}")
+        status_label = QLabel(f"Статус: {self.material_evidence.status.value}")
 
         save_button = QPushButton("Сохранить")
         delete_button = QPushButton("Удалить")
@@ -110,7 +110,6 @@ class MaterialEvidenceEditForm(QWidget):
 
         self.material_evidence.name = self.name_input.text()
         self.material_evidence.description = self.description_textarea.toPlainText()
-        self.material_evidence.status = self.status_select.currentText()
 
         if session.is_modified(self.material_evidence):
             session.commit()
@@ -137,13 +136,13 @@ class MaterialEvidenceEditForm(QWidget):
         self.close()
 
     def return_event(self):
-        self.create_event(m.MaterialEvidenceStatus.IN_STORAGE.value)
+        self.create_event(m.MaterialEvidenceStatus.IN_STORAGE.name)
 
     def take_event(self):
-        self.create_event(m.MaterialEvidenceStatus.TAKEN.value)
+        self.create_event(m.MaterialEvidenceStatus.TAKEN.name)
 
     def destroy_event(self):
-        self.create_event(m.MaterialEvidenceStatus.DESTROYED.value)
+        self.create_event(m.MaterialEvidenceStatus.DESTROYED.name)
 
     def create_event(self, status: str):
         self.material_evidence.status = status

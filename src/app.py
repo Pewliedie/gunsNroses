@@ -1,11 +1,21 @@
+import sys
+
 import sqlalchemy as sa
 from PyQt6.QtWidgets import QMainWindow, QMessageBox, QTabWidget, QVBoxLayout, QWidget
 
 import src.config as config
 from src.audit import init_audit
 from src.db import init_db, session
+from src.log import logger
 from src.models import Session
-from src.views import CaseListView, MaterialEvidenceListView, UserListView, SessionListView
+from src.utils import exception_handler
+from src.views import (
+    AuditListView,
+    CaseListView,
+    MaterialEvidenceListView,
+    SessionListView,
+    UserListView,
+)
 
 init_db()
 init_audit()
@@ -15,21 +25,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.error = False
+        self.init_ui()
 
-        try:
-            self.init_ui()
-        except Exception as e:
-            self.error = True
-            QMessageBox.critical(
-                self,
-                "Ошибка",
-                f"Возникла ошибка в ходе работы приложения. "
-                f"Обратитесь в тех.поддержку. "
-                f"Подробнее: {e}",
-            )
-            self.close()
-
+    @exception_handler
     def init_ui(self):
         current_session = self.get_current_session()
 
@@ -48,10 +46,11 @@ class MainWindow(QMainWindow):
 
         self.tab.addTab(CaseListView(), "Дела")
         self.tab.addTab(MaterialEvidenceListView(), "Вещ.доки")
-        self.tab.addTab(SessionListView(), "Сессии")
 
         if current_session.user.is_superuser:
             self.tab.addTab(UserListView(), "Пользователи")
+            self.tab.addTab(SessionListView(), "Сессии")
+            self.tab.addTab(AuditListView(), "Аудит")
 
         self.tab.currentChanged.connect(self.refresh_list_view)
 
@@ -60,12 +59,6 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(main_widget)
 
-    def show(self):
-        if self.error:
-            self.close()
-            return
-        return super().show()
-
     def get_current_session(self):
         query = sa.select(Session).where(Session.active.is_(True))
         return session.scalars(query).first()
@@ -73,13 +66,12 @@ class MainWindow(QMainWindow):
     def refresh_list_view(self, index):
         list_view = self.tab.widget(index)
 
-        if isinstance(list_view, (CaseListView, MaterialEvidenceListView, UserListView)):
+        if isinstance(
+            list_view, (CaseListView, MaterialEvidenceListView, UserListView)
+        ):
             list_view.refresh()
 
     def closeEvent(self, event):
-        if self.error:
-            return super().closeEvent(event)
-
         messagebox = QMessageBox()
         messagebox.setWindowTitle("Подтверждение выхода")
         messagebox.setText("Вы уверены, что хотите выйти?")

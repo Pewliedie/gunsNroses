@@ -18,10 +18,10 @@ from src.db import session
 
 class UserCreateForm(QWidget):
     on_save = pyqtSignal()
-    
+
     def __init__(self, is_superuser=False):
         super().__init__()
-        
+
         self.is_superuser = is_superuser
 
         self.encoded_image_data = ""

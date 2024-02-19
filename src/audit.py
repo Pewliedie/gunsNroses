@@ -6,6 +6,7 @@ import sqlalchemy as sa
 from sqlalchemy.event import listens_for
 
 import src.models as m
+from src.db import session
 
 AUDITED_MODELS = (
     m.User,
@@ -17,6 +18,14 @@ AUDITED_MODELS = (
 def json_encoder(obj):
     if isinstance(obj, (date, datetime)):
         return obj.isoformat()
+
+
+def current_session_user() -> m.User | None:
+    query = sa.select(m.Session).where(m.Session.active.is_(True))
+    current_session = session.scalars(query).first()
+    if not current_session:
+        return None
+    return current_session.user
 
 
 def create_entry(target, action, connection) -> None:
@@ -40,6 +49,8 @@ def create_entry(target, action, connection) -> None:
     if not changes:
         return
 
+    current_user = current_session_user()
+
     params = {
         "object_id": target.id,
         "table_name": target.__table__.name,
@@ -47,6 +58,7 @@ def create_entry(target, action, connection) -> None:
         "fields": ", ".join(list(changes.keys())),
         "action": action,
         "data": json.dumps(changes, default=json_encoder, ensure_ascii=False),
+        "user_id": current_user.id if current_user else None,
     }
     connection.execute(m.AuditEntry.__table__.insert().values(**params))
 

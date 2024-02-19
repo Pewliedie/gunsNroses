@@ -1,3 +1,5 @@
+import sys
+
 import sqlalchemy as sa
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
@@ -16,11 +18,13 @@ from src.biometrics.recognition import biometric_auth
 from src.db import session
 from src.models import Session, User
 from src.schemas import UserSelectItem
+from src.utils import exception_handler
 
 from .users.create import UserCreateForm
 
 
 class AuthenticationView(QWidget):
+    @exception_handler
     def __init__(self):
         super().__init__()
 
@@ -147,7 +151,7 @@ class AuthenticationView(QWidget):
             "Завершение сессии",
             "Время сессии истекло. Пожалуйста, авторизуйтесь снова",
         )
-        self.parent().close()
+        sys.exit(0)
 
     def open_main_window(self):
         self.main_window = MainWindow()
@@ -156,7 +160,6 @@ class AuthenticationView(QWidget):
         self.main_window.show()
 
     def open_create_user_window(self):
-
         self.create_user_window = UserCreateForm(is_superuser=True)
         self.create_user_window.on_save.connect(self.fetch_users)
         self.create_user_window.show()

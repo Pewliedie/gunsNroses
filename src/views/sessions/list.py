@@ -1,10 +1,5 @@
 import sqlalchemy as sa
-from PyQt6.QtWidgets import (
-    QHeaderView,
-    QTableView,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QHeaderView, QTableView, QVBoxLayout, QWidget
 
 import src.models as m
 import src.schemas as s
@@ -22,7 +17,7 @@ class SessionListView(QWidget):
 
         self.table_view = QTableView()
         self.headers = [
-            "",
+            "ID",
             "Пользователь",
             "Дата входа",
             "Дата выхода",
@@ -48,6 +43,7 @@ class SessionListView(QWidget):
         table_model = TableModel(
             data=data,
             headers=self.headers,
+            hide_first_column=False,
         )
         self.table_view.setModel(table_model)
 
