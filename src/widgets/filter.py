@@ -46,7 +46,7 @@ class FilterWidget(QWidget):
         results = session.scalars(query)
         return [self.schema.from_obj(obj) for obj in results.all()]
 
-    def refresh_items(self):
+    def refresh_items(self, mapper=None, connection=None, target=None):
         self.entities = self.fetch()
         self.items = [str(o) for o in self.entities]
         self.select.clear()

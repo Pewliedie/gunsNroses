@@ -95,7 +95,7 @@ class MaterialEvidence(Base):
         default=MaterialEvidenceStatus.IN_STORAGE,
         nullable=False,
     )
-    barcode: Mapped[int]
+    barcode: Mapped[str]
     created: Mapped[datetime] = mapped_column(server_default=func.now())
     updated: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
