@@ -17,7 +17,7 @@ def copy_assets():
 def create_zip():
     zip_file_path = os.path.join("dist", "E-Aigaq.zip")
     with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk("dist/E-Aigaq"):
+        for root, _, files in os.walk("dist/E-Aigaq"):
             for file in files:
                 file_path = os.path.join(root, file)
                 zipf.write(file_path, os.path.relpath(file_path, "dist"))
@@ -32,8 +32,14 @@ if __name__ == '__main__':
     ]
     run(options)
 
+    print("PyInstaller build completed.")
+
     copy_assets()
+
+    print("Assets copied.")
 
     create_zip()
 
-    print("Сборка завершена, файлы скопированы и создан zip-архив.")
+    print("Zip archive created.")
+
+    print("Build completed, files copied, and zip archive created.")
