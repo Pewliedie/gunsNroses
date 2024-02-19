@@ -62,6 +62,7 @@ class MainWindow(QMainWindow):
 
     def show(self):
         if self.error:
+            self.close()
             return
         return super().show()
 
@@ -72,12 +73,13 @@ class MainWindow(QMainWindow):
     def refresh_list_view(self, index):
         list_view = self.tab.widget(index)
 
-        if isinstance(
-            list_view, (CaseListView, MaterialEvidenceListView, UserListView)
-        ):
+        if isinstance(list_view, (CaseListView, MaterialEvidenceListView, UserListView)):
             list_view.refresh()
 
     def closeEvent(self, event):
+        if self.error:
+            return super().closeEvent(event)
+
         messagebox = QMessageBox()
         messagebox.setWindowTitle("Подтверждение выхода")
         messagebox.setText("Вы уверены, что хотите выйти?")
