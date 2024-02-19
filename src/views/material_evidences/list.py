@@ -125,7 +125,7 @@ class MaterialEvidenceListView(QWidget):
 
         if self.barcode:
             query = query.filter(
-                m.MaterialEvidence.barcode == self.barcode,
+                m.MaterialEvidence.barcode == self.barcode.strip(),
             )
 
         if keyword:

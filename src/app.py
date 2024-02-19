@@ -64,7 +64,14 @@ class MainWindow(QMainWindow):
         list_view = self.tab.widget(index)
 
         if isinstance(
-            list_view, (CaseListView, MaterialEvidenceListView, UserListView)
+            list_view,
+            (
+                CaseListView,
+                MaterialEvidenceListView,
+                UserListView,
+                SessionListView,
+                AuditListView,
+            ),
         ):
             list_view.refresh()
 

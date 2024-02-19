@@ -53,9 +53,10 @@ class FilterWidget(QWidget):
         self.select.addItems(self.items)
 
     def handle_change(self, index):
-        if index == -1:
+        if 0 <= index < len(self.entities):
+            self.on_change(self.entities[index].id)
+        else:
             return None
-        self.on_change(self.entities[index].id)
 
     def listen_model(self):
         event.listen(self.model, "after_insert", self.refresh_items)

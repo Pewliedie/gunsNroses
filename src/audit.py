@@ -8,11 +8,7 @@ from sqlalchemy.event import listens_for
 import src.models as m
 from src.db import session
 
-AUDITED_MODELS = (
-    m.User,
-    m.Case,
-    m.MaterialEvidence,
-)
+AUDITED_MODELS = (m.User, m.Case, m.MaterialEvidence, m.MaterialEvidenceEvent)
 
 
 def json_encoder(obj):

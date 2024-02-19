@@ -126,7 +126,7 @@ class CaseListView(QWidget):
         if self.barcode:
             query = query.filter(
                 m.Case.material_evidences.any(
-                    m.MaterialEvidence.barcode == self.barcode
+                    m.MaterialEvidence.barcode == self.barcode.strip()
                 )
             )
 
