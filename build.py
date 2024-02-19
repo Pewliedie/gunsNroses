@@ -7,7 +7,8 @@ from PyInstaller.__main__ import run
 
 def copy_assets():
     shutil.copytree(
-        "assets/face_recognition_models", "dist/E-Aigaq/_internal/face_recognition_models"
+        "assets/face_recognition_models",
+        "dist/E-Aigaq/_internal/face_recognition_models",
     )
     os.makedirs("dist/E-Aigaq/_internal/assets", exist_ok=True)
     shutil.copytree("assets/fonts", "dist/E-Aigaq/_internal/assets/fonts")
@@ -20,6 +21,7 @@ def create_zip():
             for file in files:
                 file_path = os.path.join(root, file)
                 zipf.write(file_path, os.path.relpath(file_path, "dist"))
+
 
 if __name__ == '__main__':
     options = [
