@@ -2,7 +2,7 @@ import os
 
 from PyQt6.QtCore import QDateTime, QDir, QTimeZone
 
-DEBUG = False
+DEBUG = True
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASE_PATH = os.path.join(ROOT_DIR, "database.db")
 ICON_PATH = os.path.join(ROOT_DIR, "assets/icon.png")

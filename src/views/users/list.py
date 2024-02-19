@@ -18,6 +18,7 @@ import src.schemas as s
 from src.config import DESKTOP_PATH, TODAY
 from src.db import session
 from src.report import export_to_pdf, export_to_xlsx
+from src.utils import exception_handler
 from src.views.table_model import TableModel
 from src.widgets.datepicker import DatePickerWidget
 
@@ -205,6 +206,7 @@ class UserListView(QWidget):
         rows = self.get_export_data()
         export_to_xlsx(headers=export_headers, rows=rows, file_path=file_path)
 
+    @exception_handler
     def export_pdf(self):
         file_path = self.get_file_path("pdf")
 

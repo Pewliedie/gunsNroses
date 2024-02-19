@@ -1,12 +1,9 @@
-import sys
-
 import sqlalchemy as sa
 from PyQt6.QtWidgets import QMainWindow, QMessageBox, QTabWidget, QVBoxLayout, QWidget
 
 import src.config as config
 from src.audit import init_audit
 from src.db import init_db, session
-from src.log import logger
 from src.models import Session
 from src.utils import exception_handler
 from src.views import (
