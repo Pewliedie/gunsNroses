@@ -18,12 +18,13 @@ from src.db import session
 
 class UserCreateForm(QWidget):
     on_save = pyqtSignal()
-
-    def __init__(self):
+    
+    def __init__(self, is_superuser=False):
         super().__init__()
+        
+        self.is_superuser = is_superuser
 
         self.encoded_image_data = ""
-
         self.setWindowTitle('Добавить пользователя')
         self.setMinimumWidth(DIALOG_MIN_WIDTH)
 
@@ -120,6 +121,7 @@ class UserCreateForm(QWidget):
             last_name=self.last_name_input.text(),
             phone_number=self.phone_number_input.text(),
             rank=self.rank_combobox.currentText(),
+            is_superuser=self.is_superuser,
         )
 
         user.set_password(self.password_input.text())

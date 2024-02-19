@@ -156,6 +156,7 @@ class AuthenticationView(QWidget):
         self.main_window.show()
 
     def open_create_user_window(self):
-        self.create_user_window = UserCreateForm()
+
+        self.create_user_window = UserCreateForm(is_superuser=True)
         self.create_user_window.on_save.connect(self.fetch_users)
         self.create_user_window.show()

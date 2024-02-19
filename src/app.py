@@ -5,7 +5,7 @@ import src.config as config
 from src.audit import init_audit
 from src.db import init_db, session
 from src.models import Session
-from src.views import CaseListView, MaterialEvidenceListView, UserListView
+from src.views import CaseListView, MaterialEvidenceListView, UserListView, SessionListView
 
 init_db()
 init_audit()
@@ -48,6 +48,7 @@ class MainWindow(QMainWindow):
 
         self.tab.addTab(CaseListView(), "Дела")
         self.tab.addTab(MaterialEvidenceListView(), "Вещ.доки")
+        self.tab.addTab(SessionListView(), "Сессии")
 
         if current_session.user.is_superuser:
             self.tab.addTab(UserListView(), "Пользователи")
