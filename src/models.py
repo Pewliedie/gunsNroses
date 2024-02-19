@@ -5,11 +5,15 @@ from typing import List
 from passlib.hash import pbkdf2_sha256
 from sqlalchemy import Column
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import ForeignKey, desc, select
+from sqlalchemy import ForeignKey, select
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import expression
 
 from src.db import Base, session
+
+
+def default_now():
+    return datetime.now()
 
 
 class User(Base):
@@ -23,10 +27,8 @@ class User(Base):
     rank: Mapped[str]
     is_superuser: Mapped[bool] = mapped_column(server_default=expression.false())
     active: Mapped[bool] = mapped_column(server_default=expression.true())
-    created: Mapped[datetime] = mapped_column(default=datetime.now())
-    updated: Mapped[datetime] = mapped_column(
-        default=datetime.now(), onupdate=datetime.now()
-    )
+    created: Mapped[datetime] = mapped_column(default=default_now)
+    updated: Mapped[datetime] = mapped_column(default=default_now, onupdate=default_now)
     cases: Mapped[List["Case"]] = relationship(
         "Case", back_populates="investigator", lazy="selectin"
     )
@@ -50,10 +52,8 @@ class FaceID(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(back_populates="face")
     data: Mapped[str]
-    created: Mapped[datetime] = mapped_column(default=datetime.now())
-    updated: Mapped[datetime] = mapped_column(
-        default=datetime.now(), onupdate=datetime.now()
-    )
+    created: Mapped[datetime] = mapped_column(default=default_now)
+    updated: Mapped[datetime] = mapped_column(default=default_now, onupdate=default_now)
 
 
 class Case(Base):
@@ -65,10 +65,8 @@ class Case(Base):
     investigator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     investigator: Mapped[User] = relationship(User, lazy="selectin")
     active: Mapped[bool] = mapped_column(default=True)
-    created: Mapped[datetime] = mapped_column(default=datetime.now())
-    updated: Mapped[datetime] = mapped_column(
-        default=datetime.now(), onupdate=datetime.now()
-    )
+    created: Mapped[datetime] = mapped_column(default=default_now)
+    updated: Mapped[datetime] = mapped_column(default=default_now, onupdate=default_now)
     material_evidences: Mapped[List["MaterialEvidence"]] = relationship(
         back_populates="case"
     )
@@ -99,10 +97,8 @@ class MaterialEvidence(Base):
         nullable=False,
     )
     barcode: Mapped[str]
-    created: Mapped[datetime] = mapped_column(default=datetime.now())
-    updated: Mapped[datetime] = mapped_column(
-        default=datetime.now(), onupdate=datetime.now()
-    )
+    created: Mapped[datetime] = mapped_column(default=default_now)
+    updated: Mapped[datetime] = mapped_column(default=default_now, onupdate=default_now)
     active: Mapped[bool] = mapped_column(server_default=expression.true())
 
     @property
@@ -127,7 +123,7 @@ class MaterialEvidenceEvent(Base):
     )
     material_evidence: Mapped[MaterialEvidence] = relationship(MaterialEvidence)
     action = Column(SAEnum(MaterialEvidenceStatus), nullable=False)
-    created: Mapped[datetime] = mapped_column(default=datetime.now())
+    created: Mapped[datetime] = mapped_column(default=default_now)
 
 
 class Session(Base):
@@ -136,8 +132,8 @@ class Session(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped[User] = relationship(User)
-    login: Mapped[datetime] = mapped_column(default=datetime.now())
-    logout: Mapped[datetime | None] = mapped_column(onupdate=datetime.now())
+    login: Mapped[datetime] = mapped_column(default=default_now)
+    logout: Mapped[datetime | None] = mapped_column(onupdate=default_now)
     active: Mapped[bool] = mapped_column(server_default=expression.true())
 
 
@@ -151,6 +147,6 @@ class AuditEntry(Base):
     action: Mapped[str]
     fields: Mapped[str]
     data: Mapped[str]
-    created: Mapped[datetime] = mapped_column(default=datetime.now())
+    created: Mapped[datetime] = mapped_column(default=default_now)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
     user: Mapped[User | None] = relationship(User)

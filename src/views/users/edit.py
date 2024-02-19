@@ -158,10 +158,8 @@ class UserEditForm(QWidget):
             session.flush()
             self.user.face_id = face.id
 
-        if session.is_modified(self.user):
-            session.commit()
-            self.on_save.emit()
-
+        session.commit()
+        self.on_save.emit()
         self.close()
 
     def delete(self):
