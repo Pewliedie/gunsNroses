@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from time import time
 from typing import List
 
 from passlib.hash import pbkdf2_sha256
@@ -14,6 +15,10 @@ from src.db import Base, session
 
 def default_now():
     return datetime.now()
+
+
+def create_barcode_value():
+    return round(time())
 
 
 class User(Base):
@@ -96,7 +101,7 @@ class MaterialEvidence(Base):
         default=MaterialEvidenceStatus.IN_STORAGE,
         nullable=False,
     )
-    barcode: Mapped[str]
+    barcode: Mapped[str] = mapped_column(default=create_barcode_value)
     created: Mapped[datetime] = mapped_column(default=default_now)
     updated: Mapped[datetime] = mapped_column(default=default_now, onupdate=default_now)
     active: Mapped[bool] = mapped_column(server_default=expression.true())

@@ -1,8 +1,5 @@
-import uuid
-
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
-    QComboBox,
     QLabel,
     QLineEdit,
     QMessageBox,
@@ -80,12 +77,9 @@ class MaterialEvidenceCreateForm(QWidget):
         if not valid:
             return
 
-        uuid_value = str(uuid.uuid4())
-
         material_evidence = m.MaterialEvidence(
             name=self.name_input.text(),
             description=self.description_textarea.toPlainText(),
-            barcode=uuid_value,
         )
 
         session.add(material_evidence)
