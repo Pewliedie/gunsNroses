@@ -1,16 +1,26 @@
+import os
 import sys
+import time
+from datetime import datetime
 from typing import Callable
 
+import cv2
 import qrcode
 import win32print
 import win32ui
 from PIL import ImageWin
+from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtWidgets import QMessageBox
 
-from src.config import IMAGE_PRINT_HEIGHT, IMAGE_PRINT_WIDTH, TARGET_PRINTER_NAME
+from src.config import (
+    IMAGE_PRINT_HEIGHT,
+    IMAGE_PRINT_WIDTH,
+    ROOT_DIR,
+    TARGET_PRINTER_NAME,
+)
 from src.log import logger
 
-__all__ = ("printer_processor", "exception_handler")
+__all__ = ("printer_processor", "video_recorder", "exception_handler")
 
 
 class PrinterProcessor:
@@ -83,3 +93,42 @@ def exception_handler(func):
             sys.exit(-1)
 
     return wrapper
+
+
+class VideoRecorder(QThread):
+    finished = pyqtSignal()
+
+    def __init__(
+        self, camera_index=0, save_path=ROOT_DIR + '/records', record_duration=10
+    ):
+        super().__init__()
+        self.camera_index = camera_index
+        self.save_path = save_path
+        self.record_duration = record_duration
+
+    def run(self):
+        try:
+            if not os.path.exists(self.save_path):
+                os.makedirs(self.save_path)
+            current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            filename = f"{self.save_path}/video_{current_time}.mp4"
+            cap = cv2.VideoCapture(self.camera_index)
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+            out = cv2.VideoWriter(filename, fourcc, 20.0, (640, 480))
+            start_time = time.time()
+
+            while (time.time() - start_time) < self.record_duration:
+                ret, frame = cap.read()
+                if ret:
+                    out.write(frame)
+                else:
+                    break
+
+            cap.release()
+            out.release()
+            self.finished.emit()
+        except Exception as e:
+            logger.error(f"An error occurred: {e}", exc_info=True)
+
+
+video_recorder = VideoRecorder()

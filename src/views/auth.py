@@ -1,11 +1,7 @@
 import sys
 
 import sqlalchemy as sa
-import cv2
-import time
-from datetime import datetime
-
-from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal
+from PyQt6.QtCore import Qt,  QTimer
 from PyQt6.QtWidgets import (
     QComboBox,
     QCompleter,
@@ -22,38 +18,10 @@ from src.biometrics.recognition import biometric_auth
 from src.db import session
 from src.models import Session, User
 from src.schemas import UserSelectItem
-from src.utils import exception_handler
+from src.utils import exception_handler, video_recorder
 
 from .users.create import UserCreateForm
 
-class VideoRecorder(QThread):
-    finished = pyqtSignal()
-
-    def __init__(self, camera_index=0, save_path=".", record_duration=10):
-        super().__init__()
-        self.camera_index = camera_index
-        self.save_path = save_path
-        self.record_duration = record_duration
-
-    def run(self):
-        # Получаем текущее время для имени файла
-        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f"{self.save_path}/video_{current_time}.mp4"
-        cap = cv2.VideoCapture(self.camera_index)
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(filename, fourcc, 20.0, (640, 480))
-        start_time = time.time()
-
-        while (time.time() - start_time) < self.record_duration:  # Запись в течение заданного времени
-            ret, frame = cap.read()
-            if ret:
-                out.write(frame)
-            else:
-                break
-
-        cap.release()
-        out.release()
-        self.finished.emit()
 
 class AuthenticationView(QWidget):
     @exception_handler
@@ -63,7 +31,6 @@ class AuthenticationView(QWidget):
         self.session_timer = QTimer()
         self.session_timer.timeout.connect(self.session_expired)
         self.session_timer.start(5 * 60 * 1000)
-        
 
         self.setWindowTitle("Авторизация")
         self.setFixedSize(300, 200)
@@ -107,18 +74,7 @@ class AuthenticationView(QWidget):
         return [UserSelectItem.from_obj(obj) for obj in results]
 
     def start_video_recording(self):
-        try:
-            self.video_recorder = VideoRecorder(camera_index=0, save_path=".", record_duration=10)
-            self.video_recorder.finished.connect(self.recording_finished)
-            self.video_recorder.start()
-        except:
-            QMessageBox.warning(
-                self, "Ошибка", "Ошибка при запуске видеозаписи"
-            )
-    
-    def recording_finished(self):
-        # Здесь можно добавить логику для обработки видео
-        pass
+        video_recorder.start()
 
     def fetch_users(self):
         self.users = self.list_users()
