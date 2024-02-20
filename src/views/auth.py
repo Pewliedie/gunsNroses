@@ -26,7 +26,6 @@ from src.utils import exception_handler
 
 from .users.create import UserCreateForm
 
-
 class VideoRecorder(QThread):
     finished = pyqtSignal()
 
@@ -40,7 +39,6 @@ class VideoRecorder(QThread):
         # Получаем текущее время для имени файла
         current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         filename = f"{self.save_path}/video_{current_time}.mp4"
-
         cap = cv2.VideoCapture(self.camera_index)
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(filename, fourcc, 20.0, (640, 480))
@@ -109,12 +107,18 @@ class AuthenticationView(QWidget):
         return [UserSelectItem.from_obj(obj) for obj in results]
 
     def start_video_recording(self):
-        self.video_recorder = VideoRecorder(camera_index=0, save_path=".", record_duration=10)
-        self.video_recorder.finished.connect(self.recording_finished)
-        self.video_recorder.start()
+        try:
+            self.video_recorder = VideoRecorder(camera_index=0, save_path=".", record_duration=10)
+            self.video_recorder.finished.connect(self.recording_finished)
+            self.video_recorder.start()
+        except:
+            QMessageBox.warning(
+                self, "Ошибка", "Ошибка при запуске видеозаписи"
+            )
     
     def recording_finished(self):
-        print('Recording finished')
+        # Здесь можно добавить логику для обработки видео
+        pass
 
     def fetch_users(self):
         self.users = self.list_users()
@@ -156,6 +160,7 @@ class AuthenticationView(QWidget):
 
         if user.check_password(password):
             self.manage_session(user)
+            self.start_video_recording()
             self.open_main_window()
         else:
             QMessageBox.warning(
@@ -176,6 +181,7 @@ class AuthenticationView(QWidget):
 
         if authenticated:
             self.manage_session(user)
+            self.start_video_recording()
             self.open_main_window()
         else:
             QMessageBox.warning(
