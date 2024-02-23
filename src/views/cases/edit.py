@@ -17,6 +17,8 @@ import src.models as m
 from src.config import DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH
 from src.db import session
 from src.schemas import MaterialEvidenceSelectItem, UserSelectItem
+from src.utils import get_current_user
+from src.views.material_evidences.create import MaterialEvidenceCreateForm
 
 
 class CaseEditForm(QWidget):
@@ -26,7 +28,10 @@ class CaseEditForm(QWidget):
         super().__init__()
 
         self.error = False
+
+        self.material_evidences = []
         self.selected_material_evidences = []
+        self.current_user = get_current_user()
 
         self.setWindowTitle("Редактировать дело")
         self.setMinimumSize(DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT)
@@ -56,10 +61,7 @@ class CaseEditForm(QWidget):
         self.material_evidences_list_view.setSelectionMode(
             QAbstractItemView.SelectionMode.MultiSelection
         )
-        self.material_evidences = self.list_material_evidence()
-        self.material_evidences_list_view.addItems(
-            [str(material_evidence) for material_evidence in self.material_evidences]
-        )
+        self.refresh_material_evidences()
 
         for material_evidence in self.material_evidences:
             if material_evidence.id in [me.id for me in self.case.material_evidences]:
@@ -74,6 +76,7 @@ class CaseEditForm(QWidget):
             if user.id == self.case.investigator_id:
                 self.user_select.setCurrentIndex(self.users.index(user))
 
+        add_material_evidence_button = QPushButton("Добавить вещ.док")
         save_button = QPushButton("Сохранить")
         delete_button = QPushButton("Удалить")
 
@@ -88,9 +91,11 @@ class CaseEditForm(QWidget):
         layout.addWidget(material_evidences_list_label)
         layout.addWidget(self.material_evidences_list_view)
 
-        layout.addWidget(user_select_label)
-        layout.addWidget(self.user_select)
+        if self.current_user.is_superuser:
+            layout.addWidget(user_select_label)
+            layout.addWidget(self.user_select)
 
+        layout.addWidget(add_material_evidence_button)
         layout.addWidget(save_button)
         layout.addWidget(delete_button)
 
@@ -98,6 +103,9 @@ class CaseEditForm(QWidget):
 
         self.material_evidences_list_view.selectionModel().selectionChanged.connect(
             self.on_selection_changed
+        )
+        add_material_evidence_button.clicked.connect(
+            self.show_create_material_evidence_form
         )
         save_button.clicked.connect(self.save)
         delete_button.clicked.connect(self.delete)
@@ -109,15 +117,29 @@ class CaseEditForm(QWidget):
 
     def get_data(self, entity_id: int) -> m.Case | None:
         query = sa.select(m.Case).where(m.Case.id == entity_id)
-        result: m.Case | None = session.scalar(query)
-        return result
+        case: m.Case | None = session.scalar(query)
 
-    def list_material_evidence(self):
-        query = sa.select(m.MaterialEvidence).where(
-            sa.func.casefold(m.MaterialEvidence.status).notlike("Уничтожено"),
+        if (
+            case.investigator_id != self.current_user.id
+            and not self.current_user.is_superuser
+        ):
+            return None
+
+        return case
+
+    def refresh_material_evidences(self):
+        query = sa.select(m.MaterialEvidence).filter(
+            m.MaterialEvidence.created_by_id == self.current_user.id,
+            m.MaterialEvidence.case_id.is_(None),
+            m.MaterialEvidence.status != m.MaterialEvidenceStatus.DESTROYED,
         )
         results = session.scalars(query)
-        return [MaterialEvidenceSelectItem.from_obj(obj) for obj in results.all()]
+        self.material_evidences = [
+            MaterialEvidenceSelectItem.from_obj(obj) for obj in results.all()
+        ]
+        self.material_evidences_list_view.addItems(
+            [str(material_evidence) for material_evidence in self.material_evidences]
+        )
 
     def list_users(self):
         query = sa.select(m.User).where(m.User.active.is_(True))
@@ -143,7 +165,7 @@ class CaseEditForm(QWidget):
         if not self.description_textarea.toPlainText():
             error_messages.append("Описание не может быть пустым")
 
-        if not self.user_select.currentText():
+        if not self.user_select.currentText() and self.current_user.is_superuser:
             error_messages.append("Не выбран следователь")
 
         if not self.selected_material_evidences:
@@ -169,7 +191,8 @@ class CaseEditForm(QWidget):
 
         self.case.name = self.name_input.text()
         self.case.description = self.description_textarea.toPlainText()
-        self.case.investigator_id = self.users[self.user_select.currentIndex()].id
+        if self.current_user.is_superuser:
+            self.case.investigator_id = self.users[self.user_select.currentIndex()].id
         self.case.material_evidences = material_evidences
 
         if session.is_modified(self.case):

@@ -7,13 +7,14 @@ from src.db import session
 
 
 class FilterWidget(QWidget):
-    def __init__(self, label: str, model, schema, on_change):
+    def __init__(self, label: str, model, schema, on_change, query=None):
         super().__init__()
 
         self.selected_id = None
         self.model = model
         self.schema = schema
         self.on_change = on_change
+        self.query = query
 
         self.entities = []
         self.items = []
@@ -43,6 +44,8 @@ class FilterWidget(QWidget):
 
     def fetch(self):
         query = sa.select(self.model).where(self.model.active.is_(True))
+        if self.query:
+            query = self.query()
         results = session.scalars(query)
         return [self.schema.from_obj(obj) for obj in results.all()]
 

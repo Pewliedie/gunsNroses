@@ -65,7 +65,7 @@ class UserEditForm(QWidget):
 
         open_image_button = QPushButton("Добавить изображение (Face ID)")
         save_button = QPushButton("Сохранить")
-        delete_button = QPushButton("Удалить")
+        deactivate_button = QPushButton("Деактивировать")
 
         layout = QVBoxLayout()
 
@@ -91,7 +91,7 @@ class UserEditForm(QWidget):
 
         open_image_button.clicked.connect(self.open_image)
         save_button.clicked.connect(self.save)
-        delete_button.clicked.connect(self.delete)
+        deactivate_button.clicked.connect(self.deactivate)
 
     def show(self):
         if self.error:
@@ -127,9 +127,6 @@ class UserEditForm(QWidget):
         if not self.phone_number_input.text():
             error_messages.append("Номер телефона обязательное поле")
 
-        if not self.password_input.text():
-            error_messages.append("Пароль обязательное поле")
-
         if error_messages:
             messagebox = QMessageBox()
             messagebox.critical(self, "Ошибка валидации", "\n".join(error_messages))
@@ -148,7 +145,8 @@ class UserEditForm(QWidget):
         self.user.phone_number = self.phone_number_input.text()
         self.user.rank = self.rank_combobox.currentText()
 
-        self.user.set_password(self.password_input.text())
+        if self.password_input.text():
+            self.user.set_password(self.password_input.text())
 
         if self.encoded_image_data:
             self.user.face.data = self.encoded_image_data
@@ -162,10 +160,10 @@ class UserEditForm(QWidget):
         self.on_save.emit()
         self.close()
 
-    def delete(self):
+    def deactivate(self):
         messagebox = QMessageBox()
-        messagebox.setWindowTitle("Подтверждение удаления")
-        messagebox.setText("Вы уверены, что хотите удалить пользователя?")
+        messagebox.setWindowTitle("Подтверждение деактивации")
+        messagebox.setText("Вы уверены, что хотите деактивировать пользователя?")
 
         messagebox.addButton("Да", QMessageBox.ButtonRole.YesRole)
         messagebox.addButton("Нет", QMessageBox.ButtonRole.NoRole)

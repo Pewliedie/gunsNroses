@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import sqlalchemy as sa
 from PyQt6.QtCore import QDateTime, QEvent, Qt
@@ -19,7 +19,9 @@ import src.schemas as s
 from src.config import DESKTOP_PATH, TODAY
 from src.db import session
 from src.report import export_to_pdf, export_to_xlsx
+from src.utils import get_current_user
 from src.views.cases.edit import CaseEditForm
+from src.views.material_evidences.create import MaterialEvidenceCreateForm
 from src.views.table_model import TableModel
 from src.widgets import DatePickerWidget, FilterWidget, QRDialog
 
@@ -41,6 +43,7 @@ class CaseListView(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.current_user = get_current_user()
         self.investigator_id = None
         self.barcode = ""
 
@@ -65,6 +68,7 @@ class CaseListView(QWidget):
         search_button = QPushButton("Поиск")
         reset_button = QPushButton("Сбросить")
         add_button = QPushButton("Добавить")
+        add_material_evidence_button = QPushButton("Добавить вещ.док")
         search_by_qr_button = QPushButton("Найти по QR")
         export_xlsx_button = QPushButton("Экспорт в Excel")
         export_pdf_button = QPushButton("Экспорт в PDF")
@@ -75,6 +79,7 @@ class CaseListView(QWidget):
         controls_layout.addWidget(search_button)
         controls_layout.addWidget(reset_button)
         controls_layout.addWidget(add_button)
+        controls_layout.addWidget(add_material_evidence_button)
         controls_layout.addWidget(search_by_qr_button)
         controls_layout.addWidget(export_xlsx_button)
         controls_layout.addWidget(export_pdf_button)
@@ -90,7 +95,9 @@ class CaseListView(QWidget):
             "Создан (До)", self.to_date, self.set_to_date
         )
 
-        filters_layout.addWidget(self.investigator_filter)
+        if self.current_user.is_superuser:
+            filters_layout.addWidget(self.investigator_filter)
+
         filters_layout.addWidget(self.from_date_filter)
         filters_layout.addWidget(self.to_date_filter)
 
@@ -115,13 +122,20 @@ class CaseListView(QWidget):
         search_button.clicked.connect(self.refresh)
         reset_button.clicked.connect(self.reset)
         add_button.clicked.connect(self.show_create_form)
+        add_material_evidence_button.clicked.connect(
+            self.show_create_material_evidence_form
+        )
         search_by_qr_button.clicked.connect(self.search_by_qr)
         export_xlsx_button.clicked.connect(self.export_xlsx)
         export_pdf_button.clicked.connect(self.export_pdf)
 
     def fetch_data(self):
-        query = sa.select(m.Case)
         keyword = self.search_input.text()
+
+        query = sa.select(m.Case)
+
+        if not self.current_user.is_superuser:
+            query = query.where(m.Case.investigator_id == self.current_user.id)
 
         if self.barcode:
             query = query.filter(
@@ -216,6 +230,11 @@ class CaseListView(QWidget):
         self.edit_form.on_save.connect(self.refresh)
         self.edit_form.show()
 
+    def show_create_material_evidence_form(self):
+        self.create_form = MaterialEvidenceCreateForm()
+        self.create_form.on_save.connect(self.refresh)
+        self.create_form.show()
+
     def get_export_data(self):
         raw_data = self.fetch_data()
         dumped_data = [
@@ -225,10 +244,11 @@ class CaseListView(QWidget):
         return rows
 
     def get_file_path(self, file_type: str):
+        filename = f"дела-{datetime.now().strftime('%d-%m-%Y-%H-%M')}.{file_type}"
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Сохранить файл",
-            DESKTOP_PATH + f"/cases.{file_type}",
+            DESKTOP_PATH + "/" + filename,
             f"Файлы {file_type} (*.{file_type})",
         )
         return file_path
