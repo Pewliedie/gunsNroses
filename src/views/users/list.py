@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import sqlalchemy as sa
 from PyQt6.QtCore import QDateTime
@@ -92,6 +92,7 @@ class UserListView(QWidget):
             "Звание",
             "Дата создания",
             "Дата обновления",
+            "Активен",
         ]
         self.refresh()
 
@@ -188,10 +189,13 @@ class UserListView(QWidget):
         return rows
 
     def get_file_path(self, file_type: str):
+        filename = (
+            f'пользователи-{datetime.now().strftime("%d-%m-%Y-%H-%M")}.{file_type}'
+        )
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Сохранить файл",
-            DESKTOP_PATH + f"/users.{file_type}",
+            DESKTOP_PATH + "/" + filename,
             f"Файлы {file_type} (*.{file_type})",
         )
         return file_path

@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
 import src.models as m
 from src.config import DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH
 from src.db import session
-from src.utils import printer_processor
+from src.utils import get_current_user, printer_processor
 
 
 class MaterialEvidenceCreateForm(QWidget):
@@ -20,6 +20,7 @@ class MaterialEvidenceCreateForm(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.current_user = get_current_user()
 
         self.setWindowTitle("Добавить вещ.док")
         self.setMinimumSize(DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT)
@@ -80,6 +81,7 @@ class MaterialEvidenceCreateForm(QWidget):
         material_evidence = m.MaterialEvidence(
             name=self.name_input.text(),
             description=self.description_textarea.toPlainText(),
+            created_by_id=self.current_user.id,
         )
 
         session.add(material_evidence)

@@ -42,9 +42,9 @@ class MaterialEvidenceExportItem(BaseOutModel):
     name: str
     case: str
     status: str
-    created: datetime
-    updated: datetime
-    active: bool
+    created: str
+    updated: str
+    active: str
 
     @classmethod
     def from_obj(cls, obj: m.MaterialEvidence) -> t.Self:
@@ -52,9 +52,9 @@ class MaterialEvidenceExportItem(BaseOutModel):
             "id": obj.id,
             "name": obj.name,
             "case": obj.case.name if obj.case else "",
-            "status": obj.status,
-            "created": obj.created,
-            "updated": obj.updated,
-            "active": obj.active,
+            "status": obj.status.value,
+            "created": obj.created.strftime("%d/%m/%Y %H:%M:%S"),
+            "updated": obj.updated.strftime("%d/%m/%Y %H:%M:%S"),
+            "active": "Да" if obj.active else "Нет",
         }
         return cls(**data)

@@ -6,21 +6,29 @@ from typing import Callable
 
 import cv2
 import qrcode
+import sqlalchemy as sa
 import win32print
 import win32ui
 from PIL import ImageWin
 from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtWidgets import QMessageBox
 
+import src.models as m
 from src.config import (
     IMAGE_PRINT_HEIGHT,
     IMAGE_PRINT_WIDTH,
     ROOT_DIR,
     TARGET_PRINTER_NAME,
 )
+from src.db import session
 from src.log import logger
 
-__all__ = ("printer_processor", "video_recorder", "exception_handler")
+__all__ = (
+    "printer_processor",
+    "video_recorder",
+    "exception_handler",
+    "get_current_user",
+)
 
 
 class PrinterProcessor:
@@ -132,3 +140,10 @@ class VideoRecorder(QThread):
 
 
 video_recorder = VideoRecorder()
+
+
+def get_current_user() -> m.User | None:
+    current_session = session.scalar(
+        sa.select(m.Session).where(m.Session.active.is_(True))
+    )
+    return current_session.user if current_session else None

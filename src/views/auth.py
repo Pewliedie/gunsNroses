@@ -1,7 +1,7 @@
 import sys
 
 import sqlalchemy as sa
-from PyQt6.QtCore import Qt,  QTimer
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
     QComboBox,
     QCompleter,

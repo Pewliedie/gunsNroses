@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import sqlalchemy as sa
 from PyQt6.QtCore import QDateTime, QEvent, Qt
@@ -19,6 +19,7 @@ import src.schemas as s
 from src.config import DESKTOP_PATH, TODAY
 from src.db import session
 from src.report import export_to_pdf, export_to_xlsx
+from src.utils import get_current_user
 from src.views.table_model import TableModel
 from src.widgets import DatePickerWidget, FilterWidget, QRDialog
 
@@ -41,6 +42,7 @@ class MaterialEvidenceListView(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.current_user = get_current_user()
         self.case_id = None
         self.barcode = ""
 
@@ -79,7 +81,9 @@ class MaterialEvidenceListView(QWidget):
         controls_layout.addWidget(export_xlsx_button)
         controls_layout.addWidget(export_pdf_button)
 
-        self.case_filter = FilterWidget("Дело", m.Case, s.CaseSelectItem, self.set_case)
+        self.case_filter = FilterWidget(
+            "Дело", m.Case, s.CaseSelectItem, self.set_case, query=self.query_case_list
+        )
         self.from_date_filter = DatePickerWidget(
             "Создан (От)", self.from_date, self.set_from_date
         )
@@ -121,7 +125,13 @@ class MaterialEvidenceListView(QWidget):
 
     def fetch_data(self):
         keyword = self.search_input.text()
+
         query = sa.select(m.MaterialEvidence)
+
+        if not self.current_user.is_superuser:
+            query = query.filter(
+                m.MaterialEvidence.created_by_id == self.current_user.id,
+            )
 
         if self.barcode:
             query = query.filter(
@@ -190,6 +200,12 @@ class MaterialEvidenceListView(QWidget):
         self.from_date_filter.datepicker.setDateTime(self.from_date)
         self.to_date_filter.datepicker.setDateTime(self.to_date)
 
+    def query_case_list(self):
+        query = sa.select(m.Case).where(m.Case.active.is_(True))
+        if not self.current_user.is_superuser:
+            query = query.filter(m.Case.investigator_id == self.current_user.id)
+        return query
+
     def reset(self):
         self.reset_params()
         self.refresh()
@@ -226,10 +242,11 @@ class MaterialEvidenceListView(QWidget):
         return rows
 
     def get_file_path(self, file_type: str):
+        filename = f"вещественные-доказательства-{datetime.now().strftime('%d-%m-%Y-%H-%M')}.{file_type}"
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Сохранить файл",
-            DESKTOP_PATH + f"/material_evidences.{file_type}",
+            DESKTOP_PATH + '/' + filename,
             f"Файлы {file_type} (*.{file_type})",
         )
         return file_path

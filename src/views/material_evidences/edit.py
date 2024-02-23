@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
 import src.models as m
 from src.config import DIALOG_MIN_HEIGHT, DIALOG_MIN_WIDTH
 from src.db import session
+from src.utils import get_current_user
 
 
 class MaterialEvidenceEditForm(QWidget):
@@ -22,6 +23,7 @@ class MaterialEvidenceEditForm(QWidget):
         super().__init__()
 
         self.error = False
+        self.current_user = get_current_user()
 
         self.setWindowTitle("Редактировать вещ.док")
         self.setMinimumSize(DIALOG_MIN_WIDTH, DIALOG_MIN_HEIGHT)
@@ -36,6 +38,10 @@ class MaterialEvidenceEditForm(QWidget):
             QMessageBox.critical(self, "Ошибка", "Вещ.док не найден")
             self.close()
             return
+
+        case_label = QLabel(
+            f"Дело: {self.material_evidence.case.name if self.material_evidence.case else 'Не прикреплено'}"
+        )
 
         name_label = QLabel("Наименование")
         self.name_input = QLineEdit(self.material_evidence.name)
@@ -60,6 +66,8 @@ class MaterialEvidenceEditForm(QWidget):
         destroy_button = QPushButton("Уничтожить")
 
         layout = QVBoxLayout()
+
+        layout.addWidget(case_label)
 
         layout.addWidget(name_label)
         layout.addWidget(self.name_input)
@@ -157,16 +165,8 @@ class MaterialEvidenceEditForm(QWidget):
     def create_event(self, status: str):
         self.material_evidence.status = status
 
-        query = (
-            sa.select(m.Session)
-            .filter(m.Session.active.is_(True))
-            .order_by(m.Session.login.desc())
-        )
-
-        current_session = session.scalars(query).first()
-
         event = m.MaterialEvidenceEvent(
-            user_id=current_session.user_id,
+            user_id=self.current_user.id,
             material_evidence_id=self.material_evidence.id,
             action=status,
         )

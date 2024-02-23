@@ -48,3 +48,26 @@ class SessionListItem(BaseOutModel):
             "duration": duration,
         }
         return cls(**data)
+
+
+class SessionExportItem(BaseOutModel):
+    user: str
+    login: str
+    logout: str | None
+    duration: str | None
+
+    @classmethod
+    def from_obj(cls, obj: m.Session) -> t.Self:
+        user = f"{obj.user.last_name} {obj.user.first_name} - ({obj.user.rank})"
+        duration = (
+            seconds_to_human_readable((obj.logout - obj.login).total_seconds())
+            if obj.logout
+            else None
+        )
+        data = {
+            "user": user,
+            "login": obj.login.strftime("%d/%m/%Y %H:%M:%S"),
+            "logout": obj.logout.strftime("%d/%m/%Y %H:%M:%S") if obj.logout else None,
+            "duration": duration,
+        }
+        return cls(**data)

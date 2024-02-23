@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import sqlalchemy as sa
 from PyQt6.QtWidgets import (
     QFileDialog,
@@ -70,17 +72,19 @@ class AuditListView(QWidget):
     def get_export_data(self):
         raw_data = self.fetch_data()
         dumped_data = [
-            s.AuditEntryListItem.from_obj(obj).model_dump(mode="json")
+            s.AuditEntryExportItem.from_obj(obj).model_dump(mode="json")
             for obj in raw_data
         ]
         rows = [list(d.values()) for d in dumped_data]
         return rows
 
     def get_file_path(self, file_type: str):
+        filename = f'аудит-{datetime.now().strftime("%d-%m-%Y-%H-%M")}.{file_type}'
+
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Сохранить файл",
-            DESKTOP_PATH + f"/audit.{file_type}",
+            DESKTOP_PATH + '/' + filename,
             f"Файлы {file_type} (*.{file_type})",
         )
         return file_path

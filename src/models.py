@@ -95,6 +95,8 @@ class MaterialEvidence(Base):
     case: Mapped[Case | None] = relationship(
         Case, back_populates="material_evidences", lazy="selectin"
     )
+    created_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    created_by: Mapped[User] = relationship(User)
     description: Mapped[str]
     status = Column(
         SAEnum(MaterialEvidenceStatus),
