@@ -173,5 +173,5 @@ class AuthenticationView(QWidget):
     
     def open_create_webcam_window(self):
         self.create_webcam_window = WebCamListView()
-        self.create_user_window.on_save.connect(self.fetch_users)
+        self.create_webcam_window.finished.connect(self.fetch_users)
         self.create_webcam_window.show()

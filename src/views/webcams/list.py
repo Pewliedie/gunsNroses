@@ -6,7 +6,9 @@ from PyQt6.QtWidgets import (
     QTableView,
     QVBoxLayout,
     QWidget,
+    
 )
+from PyQt6.QtCore import pyqtSignal
 
 from pygrabber.dshow_graph import FilterGraph
 
@@ -19,6 +21,8 @@ from src.config import DIALOG_MIN_WIDTH
 
 
 class WebCamListView(QWidget):
+    
+    finished = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -95,4 +99,8 @@ class WebCamListView(QWidget):
         self.edit_form = WebCamCreateForm(webcam_id)
         self.edit_form.on_save.connect(self.refresh)
         self.edit_form.show()
+
+    def closeEvent(self, event):
+        self.finished.emit()
+        super().closeEvent(event)
 
