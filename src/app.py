@@ -12,6 +12,7 @@ from src.views import (
     MaterialEvidenceListView,
     SessionListView,
     UserListView,
+    WebCamListView,
 )
 
 init_db()
@@ -48,6 +49,7 @@ class MainWindow(QMainWindow):
             self.tab.addTab(UserListView(), "Пользователи")
             self.tab.addTab(SessionListView(), "Сессии")
             self.tab.addTab(AuditListView(), "Аудит")
+            self.tab.addTab(WebCamListView(), "Настройки")
 
         self.tab.currentChanged.connect(self.refresh_list_view)
 

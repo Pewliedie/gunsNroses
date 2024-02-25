@@ -143,6 +143,21 @@ class Session(Base):
     logout: Mapped[datetime | None] = mapped_column(onupdate=default_now)
     active: Mapped[bool] = mapped_column(server_default=expression.true())
 
+class WebCamType(Enum):
+    FACE_ID = "Аутентификация по лицу"
+    REC = "Запись видео"
+    DEFAULT = "Обычная камера"
+
+class WebCam(Base):
+    __tablename__ = "webcams"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    device_id: Mapped[int] = mapped_column(unique=True)
+    name: Mapped[str]
+    type: Mapped[str] = mapped_column(SAEnum(WebCamType))
+    created: Mapped[datetime] = mapped_column(default=default_now)
+    updated: Mapped[datetime] = mapped_column(default=default_now, onupdate=default_now)
+    active: Mapped[bool] = mapped_column(server_default=expression.true())
 
 class AuditEntry(Base):
     __tablename__ = "audit_entries"

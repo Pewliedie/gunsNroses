@@ -86,7 +86,15 @@ class UserCreateForm(QWidget):
 
         if dialogSuccess:
             image_path = dialog.selectedFiles()[0]
-            self.encoded_image_data = recognizer.encode_image(image_path)
+            encoded_image_data = recognizer.encode_image(image_path)
+            if not encoded_image_data:
+                messagebox = QMessageBox()
+                messagebox.critical(
+                    self, "Ошибка", "Не удалось распознать лицо на изображении, загрузите другое фото"
+                )
+                return
+            
+            self.encoded_image_data = encoded_image_data
 
     def validate(self):
         error_messages = []

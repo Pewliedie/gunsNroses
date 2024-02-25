@@ -17,7 +17,10 @@ class Recognizer:
     def encode_image(self, image_path):
         img = cv2.imread(image_path)
         rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_encoding = face_recognition.face_encodings(rgb_img)[0]
+        encoding = face_recognition.face_encodings(rgb_img)
+        if len(encoding) == 0:
+            return None
+        img_encoding = encoding[0]
         json_encoding = json.dumps(img_encoding.tolist())
         return json_encoding
 
@@ -52,7 +55,7 @@ class Recognizer:
         return face_locations.astype(int), face_names
 
 
-def biometric_auth(face_encodings, id):
+def biometric_auth(face_encodings, id, webcam_id=0):
     recognizer = Recognizer()
 
     image_encoding = np.array(json.loads(face_encodings))
@@ -60,8 +63,7 @@ def biometric_auth(face_encodings, id):
     recognizer.known_face_encodings.append(image_encoding)
     recognizer.known_face_names.append(id)
 
-    cap = cv2.VideoCapture(0)
-
+    cap = cv2.VideoCapture(webcam_id + cv2.CAP_DSHOW)
     while True:
         _, frame = cap.read()
 

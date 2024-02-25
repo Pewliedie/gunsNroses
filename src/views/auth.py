@@ -16,11 +16,12 @@ from PyQt6.QtWidgets import (
 from src.app import MainWindow
 from src.biometrics.recognition import biometric_auth
 from src.db import session
-from src.models import Session, User
+from src.models import Session, User, WebCam, WebCamType
 from src.schemas import UserSelectItem
 from src.utils import exception_handler, video_recorder
 
 from .users.create import UserCreateForm
+from .webcams import WebCamListView
 
 
 class AuthenticationView(QWidget):
@@ -129,7 +130,8 @@ class AuthenticationView(QWidget):
         try:
             user_id = self.users[self.user_select.currentIndex()].id
             user = session.query(User).filter(User.id == user_id).first()
-            authenticated = biometric_auth(user.face.data, str(user.face.id))
+            webcam = session.query(WebCam).filter(WebCam.type == WebCamType.FACE_ID).first()
+            authenticated = biometric_auth(user.face.data, str(user.face.id), webcam.device_id)
         except:
             QMessageBox.warning(
                 self, "Ошибка авторизации", "Ошибка при аутентификации по FACE ID"
@@ -166,5 +168,10 @@ class AuthenticationView(QWidget):
 
     def open_create_user_window(self):
         self.create_user_window = UserCreateForm(is_superuser=True)
-        self.create_user_window.on_save.connect(self.fetch_users)
+        self.create_user_window.on_save.connect(self.open_create_webcam_window)
         self.create_user_window.show()
+    
+    def open_create_webcam_window(self):
+        self.create_webcam_window = WebCamListView()
+        self.create_user_window.on_save.connect(self.fetch_users)
+        self.create_webcam_window.show()
