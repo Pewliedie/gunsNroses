@@ -86,6 +86,7 @@ class UserEditForm(QWidget):
 
         layout.addWidget(open_image_button)
         layout.addWidget(save_button)
+        layout.addWidget(deactivate_button)
 
         self.setLayout(layout)
 
