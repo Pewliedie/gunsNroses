@@ -150,11 +150,9 @@ class VideoRecorder(QThread):
             self.finished.emit()
 
     def get_webcam_index(self)-> int | None:
-        webcam = session.query(m.WebCam).filter(m.WebCam.type == m.WebCamType.REC).first()
-        if webcam:
-            return webcam.device_id
-        return None
-    
+        # session.query(m.WebCam).filter(m.WebCam.type == m.WebCamType.REC).first()
+        return 0
+       
     def stop(self):
         self.running = False
 
