@@ -55,7 +55,7 @@ class Recognizer:
         return face_locations.astype(int), face_names
 
 
-def biometric_auth(face_encodings, id, webcam_id=0):
+def biometric_auth(face_encodings, id, camera_id=0):
     recognizer = Recognizer()
 
     image_encoding = np.array(json.loads(face_encodings))
@@ -63,7 +63,7 @@ def biometric_auth(face_encodings, id, webcam_id=0):
     recognizer.known_face_encodings.append(image_encoding)
     recognizer.known_face_names.append(id)
 
-    cap = cv2.VideoCapture(webcam_id + cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(camera_id + cv2.CAP_DSHOW)
     while True:
         _, frame = cap.read()
 

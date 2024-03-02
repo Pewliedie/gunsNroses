@@ -15,6 +15,7 @@ import src.models as m
 from src.biometrics.recognition import recognizer
 from src.config import DIALOG_MIN_WIDTH, RANK_LIST
 from src.db import session
+from src.utils import get_current_user
 
 
 class UserEditForm(QWidget):
@@ -23,6 +24,7 @@ class UserEditForm(QWidget):
     def __init__(self, user_id: int):
         super().__init__()
 
+        self.current_user = get_current_user()
         self.error = False
 
         self.setWindowTitle("Редактировать пользователя")
@@ -86,7 +88,9 @@ class UserEditForm(QWidget):
 
         layout.addWidget(open_image_button)
         layout.addWidget(save_button)
-        layout.addWidget(deactivate_button)
+
+        if self.current_user.id != self.user.id:
+            layout.addWidget(deactivate_button)
 
         self.setLayout(layout)
 
@@ -166,12 +170,17 @@ class UserEditForm(QWidget):
         messagebox.setWindowTitle("Подтверждение деактивации")
         messagebox.setText("Вы уверены, что хотите деактивировать пользователя?")
 
-        messagebox.addButton("Да", QMessageBox.ButtonRole.YesRole)
-        messagebox.addButton("Нет", QMessageBox.ButtonRole.NoRole)
+        messagebox.setStandardButtons(
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        messagebox.setDefaultButton(QMessageBox.StandardButton.Yes)
+
+        messagebox.button(QMessageBox.StandardButton.Yes).setText("Да")
+        messagebox.button(QMessageBox.StandardButton.No).setText("Нет")
 
         response = messagebox.exec()
 
-        if response == QMessageBox.ButtonRole.NoRole:
+        if response == QMessageBox.StandardButton.No:
             return
 
         self.user.active = False

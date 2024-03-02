@@ -2,21 +2,17 @@ import sqlalchemy as sa
 from PyQt6.QtWidgets import QMainWindow, QMessageBox, QTabWidget, QVBoxLayout, QWidget
 
 import src.config as config
-from src.audit import init_audit
-from src.db import init_db, session
+from src.db import session
 from src.models import Session
 from src.utils import exception_handler
 from src.views import (
     AuditListView,
+    CameraListView,
     CaseListView,
     MaterialEvidenceListView,
     SessionListView,
     UserListView,
-    WebCamListView,
 )
-
-init_db()
-init_audit()
 
 
 class MainWindow(QMainWindow):
@@ -49,7 +45,7 @@ class MainWindow(QMainWindow):
             self.tab.addTab(UserListView(), "Пользователи")
             self.tab.addTab(SessionListView(), "Сессии")
             self.tab.addTab(AuditListView(), "Аудит")
-            self.tab.addTab(WebCamListView(), "Настройки")
+            self.tab.addTab(CameraListView(), "Настройки камер")
 
         self.tab.currentChanged.connect(self.refresh_list_view)
 

@@ -107,16 +107,14 @@ class VideoRecorder(QThread):
 
     finished = pyqtSignal()
 
-    def __init__(
-        self, save_path=ROOT_DIR + '/records', record_duration=10
-    ):
+    def __init__(self, save_path=ROOT_DIR + '/records', record_duration=10):
         super().__init__()
         self.running = False
-        camera_index = self.get_webcam_index()
+        camera_index = self.get_camera_index()
         if camera_index is None:
-            logger.error("No webcam found for recording")
+            logger.error("No camera found for recording")
             return
-        
+
         self.camera_index = camera_index
         self.save_path = save_path
         self.record_duration = record_duration
@@ -129,11 +127,11 @@ class VideoRecorder(QThread):
             current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             filename = f"{self.save_path}/video_{current_time}.mp4"
             cap = cv2.VideoCapture(self.camera_index + cv2.CAP_DSHOW)
- 
+
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
             out = cv2.VideoWriter(filename, fourcc, 20.0, (640, 480))
             start_time = time.time()
-            
+
             while self.running and (time.time() - start_time) < self.record_duration:
                 ret, frame = cap.read()
                 if ret:
@@ -149,14 +147,16 @@ class VideoRecorder(QThread):
         finally:
             self.finished.emit()
 
-    def get_webcam_index(self)-> int | None:
-        # session.query(m.WebCam).filter(m.WebCam.type == m.WebCamType.REC).first()
+    def get_camera_index(self) -> int | None:
+        # session.query(m.Camera).filter(m.Camera.type == m.CameraType.REC).first()
         return 0
-       
+
     def stop(self):
         self.running = False
 
+
 video_recorder = VideoRecorder()
+
 
 def get_current_user() -> m.User | None:
     current_session = session.scalar(

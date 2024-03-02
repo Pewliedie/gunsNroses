@@ -128,7 +128,7 @@ class MaterialEvidenceListView(QWidget):
 
         query = sa.select(m.MaterialEvidence)
 
-        if not self.current_user.is_superuser:
+        if not self.current_user.is_superuser or not self.barcode:
             query = query.filter(
                 m.MaterialEvidence.created_by_id == self.current_user.id,
             )
@@ -159,14 +159,12 @@ class MaterialEvidenceListView(QWidget):
         )
         query = query.order_by(m.MaterialEvidence.name)
         results = session.scalars(query)
-        return results
+        return results.all()
 
     def refresh(self):
         raw_data = self.fetch_data()
 
-        data = [
-            list(s.MaterialEvidenceListItem.from_obj(obj)) for obj in raw_data.all()
-        ]
+        data = [list(s.MaterialEvidenceListItem.from_obj(obj)) for obj in raw_data]
         table_model = TableModel(
             data=data,
             headers=self.headers,
@@ -182,7 +180,7 @@ class MaterialEvidenceListView(QWidget):
             )
             self.table_view.setIndexWidget(table_model.index(i, 0), button)
 
-        return len(data)
+        return raw_data
 
     def reset_params(self, ignore_barcode=False):
         self.search_input.clear()
@@ -246,7 +244,7 @@ class MaterialEvidenceListView(QWidget):
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Сохранить файл",
-            DESKTOP_PATH + '/' + filename,
+            DESKTOP_PATH + "/" + filename,
             f"Файлы {file_type} (*.{file_type})",
         )
         return file_path
@@ -272,14 +270,29 @@ class MaterialEvidenceListView(QWidget):
     def handle_scan(self, event):
         if event.type() == QEvent.Type.KeyPress:
             if event.key() == Qt.Key.Key_Return:
+                if not self.barcode:
+                    QMessageBox.critical(self, "Поиск по QR", "Пустое значение")
+                    self.qr_dialog.close()
+                    return
+
                 self.reset_params(ignore_barcode=True)
-                count = self.refresh()
+                material_evidences = self.refresh()
 
                 self.barcode = ""
                 self.qr_dialog.close()
 
+                for me in material_evidences:
+                    if (
+                        not self.current_user.is_superuser
+                        and me.created_by_id != self.current_user.id
+                    ):
+                        QMessageBox.critical(self, "Поиск по QR", "Доступ запрещен!")
+                        return
+
                 QMessageBox.information(
-                    self, "Поиск по QR", f"Найдено {count} запись(-и/-ей)"
+                    self,
+                    "Поиск по QR",
+                    f"Найдено {len(material_evidences)} запись(-и/-ей)",
                 )
                 return
             elif event.text():

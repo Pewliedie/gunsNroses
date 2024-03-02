@@ -134,7 +134,7 @@ class CaseListView(QWidget):
 
         query = sa.select(m.Case)
 
-        if not self.current_user.is_superuser:
+        if not self.current_user.is_superuser or not self.barcode:
             query = query.where(m.Case.investigator_id == self.current_user.id)
 
         if self.barcode:
@@ -185,7 +185,7 @@ class CaseListView(QWidget):
             )
             self.table_view.setIndexWidget(table_model.index(i, 0), button)
 
-        return len(data)
+        return raw_data
 
     def reset_params(self, ignore_barcode=False):
         self.search_input.clear()
@@ -274,14 +274,27 @@ class CaseListView(QWidget):
     def handle_scan(self, event):
         if event.type() == QEvent.Type.KeyPress:
             if event.key() == Qt.Key.Key_Return:
+                if not self.barcode:
+                    QMessageBox.critical(self, "Поиск по QR", "Пустое значение")
+                    self.qr_dialog.close()
+                    return
+
                 self.reset_params(ignore_barcode=True)
-                count = self.refresh()
+                cases = self.refresh()
 
                 self.barcode = ""
                 self.qr_dialog.close()
 
+                for case in cases:
+                    if (
+                        not self.current_user.is_superuser
+                        and case.investigator_id != self.current_user.id
+                    ):
+                        QMessageBox.critical(self, "Поиск по QR", "Доступ запрещен!")
+                        return
+
                 QMessageBox.information(
-                    self, "Поиск по QR", f"Найдено {count} запись(-и/-ей)"
+                    self, "Поиск по QR", f"Найдено {len(cases)} запись(-и/-ей)"
                 )
                 return
             elif event.text():

@@ -18,6 +18,13 @@ from src.db import session
 from src.report import export_to_pdf, export_to_xlsx
 from src.views.table_model import TableModel
 
+export_headers = [
+    "Пользователь",
+    "Дата входа",
+    "Дата выхода",
+    "Время сессии",
+]
+
 
 class SessionListView(QWidget):
 
@@ -102,7 +109,7 @@ class SessionListView(QWidget):
             return
 
         rows = self.get_export_data()
-        export_to_xlsx(headers=self.headers, rows=rows, file_path=file_path)
+        export_to_xlsx(headers=export_headers, rows=rows, file_path=file_path)
 
     def export_pdf(self):
         file_path = self.get_file_path("pdf")
@@ -111,4 +118,4 @@ class SessionListView(QWidget):
             return
 
         rows = self.get_export_data()
-        export_to_pdf(headers=self.headers, rows=rows, file_path=file_path)
+        export_to_pdf(headers=export_headers, rows=rows, file_path=file_path)

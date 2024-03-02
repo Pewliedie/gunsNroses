@@ -108,6 +108,7 @@ class CaseCreateForm(QWidget):
         self.material_evidences = [
             MaterialEvidenceSelectItem.from_obj(obj) for obj in results.all()
         ]
+        self.material_evidences_list_view.clear()
         self.material_evidences_list_view.addItems(
             [str(material_evidence) for material_evidence in self.material_evidences]
         )
