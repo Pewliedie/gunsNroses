@@ -39,6 +39,7 @@ class CaseEditForm(QWidget):
         self.init_ui(case_id)
 
     def init_ui(self, case_id: int):
+        # Get the case data
         self.case = self.get_data(case_id)
 
         if not self.case:
@@ -47,6 +48,7 @@ class CaseEditForm(QWidget):
             self.close()
             return
 
+        # Create the UI elements
         name_label = QLabel("Наименование")
         self.name_input = QLineEdit(self.case.name)
 
@@ -63,12 +65,6 @@ class CaseEditForm(QWidget):
         )
         self.refresh_material_evidences()
 
-        for material_evidence in self.material_evidences:
-            if material_evidence.id in [me.id for me in self.case.material_evidences]:
-                self.material_evidences_list_view.item(
-                    self.material_evidences.index(material_evidence)
-                ).setSelected(True)
-
         self.users = self.list_users()
         self.user_select.addItems([str(user) for user in self.users])
 
@@ -82,6 +78,7 @@ class CaseEditForm(QWidget):
 
         layout = QVBoxLayout()
 
+        # Add the UI elements to the layout
         layout.addWidget(name_label)
         layout.addWidget(self.name_input)
 
@@ -101,8 +98,9 @@ class CaseEditForm(QWidget):
 
         self.setLayout(layout)
 
+        # Connect signals to slots
         self.material_evidences_list_view.selectionModel().selectionChanged.connect(
-            self.on_selection_changed
+            self.update_selection
         )
         add_material_evidence_button.clicked.connect(
             self.show_create_material_evidence_form
@@ -116,6 +114,7 @@ class CaseEditForm(QWidget):
         return super().show()
 
     def get_data(self, entity_id: int) -> m.Case | None:
+        # Retrieve the case from the database
         query = sa.select(m.Case).where(m.Case.id == entity_id)
         case: m.Case | None = session.scalar(query)
 
@@ -128,14 +127,24 @@ class CaseEditForm(QWidget):
         return case
 
     def show_create_material_evidence_form(self):
+        # Show the create material evidence form
         self.create_form = MaterialEvidenceCreateForm()
         self.create_form.on_save.connect(self.refresh_material_evidences)
         self.create_form.show()
 
+    def select_material_evidences(self):
+        # Select the material evidences that are associated with the case
+        for material_evidence in self.material_evidences:
+            if material_evidence.id in [me.id for me in self.case.material_evidences]:
+                index = self.material_evidences.index(material_evidence)
+                item = self.material_evidences_list_view.item(index)
+                item.setSelected(True)
+        self.update_selection()
+
     def refresh_material_evidences(self):
+        # Refresh the list of material evidences
         query = sa.select(m.MaterialEvidence).filter(
             m.MaterialEvidence.created_by_id == self.current_user.id,
-            m.MaterialEvidence.case_id.is_(None),
             m.MaterialEvidence.status != m.MaterialEvidenceStatus.DESTROYED,
         )
         results = session.scalars(query)
@@ -146,13 +155,16 @@ class CaseEditForm(QWidget):
         self.material_evidences_list_view.addItems(
             [str(material_evidence) for material_evidence in self.material_evidences]
         )
+        self.select_material_evidences()
 
     def list_users(self):
+        # Retrieve the list of active users
         query = sa.select(m.User).where(m.User.active.is_(True))
         results = session.scalars(query).all()
         return [UserSelectItem.from_obj(obj) for obj in results]
 
-    def on_selection_changed(self):
+    def update_selection(self):
+        # Update the selected material evidences
         selected_indexes = [
             index.row() for index in self.material_evidences_list_view.selectedIndexes()
         ]
@@ -163,6 +175,7 @@ class CaseEditForm(QWidget):
         ]
 
     def validate(self):
+        # Validate the form inputs
         error_messages = []
 
         if not self.name_input.text():
@@ -195,6 +208,7 @@ class CaseEditForm(QWidget):
         )
         material_evidences = session.scalars(query).all()
 
+        # Update the case with the form inputs
         self.case.name = self.name_input.text()
         self.case.description = self.description_textarea.toPlainText()
         if self.current_user.is_superuser:
