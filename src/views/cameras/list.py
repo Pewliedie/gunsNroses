@@ -98,3 +98,6 @@ class CameraListView(QWidget):
     def closeEvent(self, event):
         self.finished.emit()
         super().closeEvent(event)
+
+    def reset(self):
+        self.refresh()

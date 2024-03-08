@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
                 AuditListView,
             ),
         ):
-            list_view.refresh()
+            list_view.reset()
 
     def closeEvent(self, event):
         messagebox = QMessageBox()

@@ -56,6 +56,7 @@ class AuditListView(QWidget):
         results = session.scalars(query)
         return results.all()
 
+
     def refresh(self):
         raw_data = self.fetch_data()
         data = [list(s.AuditEntryListItem.from_obj(obj)) for obj in raw_data]
@@ -97,3 +98,6 @@ class AuditListView(QWidget):
 
         rows = self.get_export_data()
         export_to_xlsx(headers=self.headers, rows=rows, file_path=file_path)
+        
+    def reset(self):
+        self.refresh()

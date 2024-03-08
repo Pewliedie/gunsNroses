@@ -83,6 +83,9 @@ class SessionListView(QWidget):
 
         return len(data)
 
+    def reset(self):
+        self.refresh()
+        
     def get_export_data(self):
         raw_data = self.fetch_data()
         dumped_data = [
