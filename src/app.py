@@ -1,5 +1,7 @@
+import sys
 import sqlalchemy as sa
 from PyQt6.QtWidgets import QMainWindow, QMessageBox, QTabWidget, QVBoxLayout, QWidget
+from PyQt6.QtCore import Qt, QTimer
 
 import src.config as config
 from src.db import session
@@ -24,6 +26,10 @@ class MainWindow(QMainWindow):
     @exception_handler
     def init_ui(self):
         current_session = self.get_current_session()
+
+        self.session_timer = QTimer()
+        self.session_timer.timeout.connect(self.session_expired)
+        self.session_timer.start(20 * 60 * 1000)
 
         if not current_session:
             QMessageBox.critical(self, "Ошибка", "Не удалось получить сессию")
@@ -72,6 +78,14 @@ class MainWindow(QMainWindow):
             ),
         ):
             list_view.reset()
+
+    def session_expired(self):
+        QMessageBox.warning(
+            self,
+            "Завершение сессии",
+            "Время сессии истекло. Пожалуйста, авторизуйтесь снова",
+        )
+        sys.exit(0)
 
     def closeEvent(self, event):
         messagebox = QMessageBox()

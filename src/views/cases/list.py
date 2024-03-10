@@ -201,7 +201,6 @@ class CaseListView(QWidget):
 
         self.investigator_filter.select.setCurrentIndex(-1)
 
-        self.investigator_filter.select.setCurrentIndex(-1)
         self.from_date_filter.datepicker.setDateTime(self.from_date)
         self.to_date_filter.datepicker.setDateTime(self.to_date)
 

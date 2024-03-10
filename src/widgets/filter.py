@@ -1,5 +1,6 @@
 import sqlalchemy as sa
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import QComboBox, QCompleter, QLabel, QVBoxLayout, QWidget
 from sqlalchemy import event
 
@@ -58,8 +59,21 @@ class FilterWidget(QWidget):
     def handle_change(self, index):
         if 0 <= index < len(self.entities):
             self.on_change(self.entities[index].id)
+        else:
+            self.on_change(None)
 
     def listen_model(self):
         event.listen(self.model, "after_insert", self.refresh_items)
         event.listen(self.model, "after_update", self.refresh_items)
         event.listen(self.model, "after_delete", self.refresh_items)
+
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key.Key_Return or event.key() == Qt.Key.Key_Enter:
+            entered_text = self.select.currentText() 
+            if entered_text not in self.items: 
+                self.refresh_items()
+                self.select.setCurrentIndex(-1)
+                return None
+        
+        super().keyPressEvent(event)
