@@ -47,7 +47,7 @@ class CaseListView(QWidget):
         self.investigator_id = None
         self.barcode = ""
 
-        self.from_date = TODAY.addMonths(-1)
+        self.from_date = QDateTime(2024, 2, 1, 0, 0)  # Year, Month, Day, Hour, Minute
         self.to_date = TODAY
 
         layout = QVBoxLayout()
@@ -196,7 +196,7 @@ class CaseListView(QWidget):
         if not ignore_barcode:
             self.barcode = ""
 
-        self.from_date = TODAY.addMonths(-1)
+        self.from_date = QDateTime(2024, 2, 1, 0, 0)
         self.to_date = TODAY
 
         self.investigator_filter.select.setCurrentIndex(-1)

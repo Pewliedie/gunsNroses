@@ -42,7 +42,7 @@ class UserListView(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.from_date = TODAY.addMonths(-1)
+        self.from_date = QDateTime(2024, 2, 1, 0, 0)  # Year, Month, Day, Hour, Minute
         self.to_date = TODAY
 
         layout = QVBoxLayout()
@@ -154,7 +154,7 @@ class UserListView(QWidget):
     def reset(self):
         self.search_input.clear()
 
-        self.from_date = TODAY.addMonths(-1)
+        self.from_date = QDateTime(2024, 2, 1, 0, 0)
         self.to_date = TODAY
 
         self.from_date_filter.datepicker.setDateTime(self.from_date)
